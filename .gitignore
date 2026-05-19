@@ -1,0 +1,14 @@
+# Ignore node_modules
+node_modules/
+coverage/
+
+# Ignore all .md files
+*.md
+
+# But keep README.md
+!README.md
+!README_CN.md
+
+# Keep all files in any docs directories (including .md files)
+!docs/
+!docs/**
