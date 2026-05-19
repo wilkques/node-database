@@ -18,14 +18,16 @@ Processor 系统将原始数据库查询结果转换为正确类型的 JavaScrip
 ### 处理 SELECT 结果
 
 ```javascript
-import MySQLProcessor from './lib/queries/processors/MySQLProcessor.js';
-import Connection from './lib/Connection.js';
+import MySQLProcessor from "./lib/queries/processors/MySQLProcessor.js";
+import Connection from "./lib/Connection.js";
 
-const connection = new Connection({ /* config */ });
+const connection = new Connection({
+  /* config */
+});
 const processor = new MySQLProcessor();
 
 // 执行查询并处理结果
-const result = await connection.select('SELECT * FROM users');
+const result = await connection.select("SELECT * FROM users");
 const processedResults = processor.processSelect(result, connection.fields);
 
 console.log(processedResults);
@@ -36,18 +38,18 @@ console.log(processedResults);
 
 ```javascript
 // 简单 INSERT
-const result = await connection.insert('INSERT INTO users ...');
+const result = await connection.insert("INSERT INTO users ...");
 const processed = processor.processInsert(result);
 
 // INSERT 并获取自增 ID
-const id = await connection.insertGetId('INSERT INTO users ...', [], 'id');
+const id = await connection.insertGetId("INSERT INTO users ...", [], "id");
 console.log(id); // 生成的 ID
 ```
 
 ### 处理 UPDATE 结果
 
 ```javascript
-const result = await connection.update('UPDATE users SET ...');
+const result = await connection.update("UPDATE users SET ...");
 const affected = processor.processUpdate(result);
 console.log(affected.affectedRows); // 受影响的行数
 ```
@@ -55,7 +57,7 @@ console.log(affected.affectedRows); // 受影响的行数
 ### 处理 DELETE 结果
 
 ```javascript
-const result = await connection.delete('DELETE FROM users ...');
+const result = await connection.delete("DELETE FROM users ...");
 const deleted = processor.processDelete(result);
 console.log(deleted.affectedRows); // 删除的行数
 ```
@@ -74,10 +76,10 @@ TINYINT(1) 列在 MySQL 中常用于布尔值：
 // 数据库: status TINYINT(1) - 存储为 0 或 1
 const raw = { id: 1, status: 1 };
 
-const processed = processor.processValue(raw.status, 'TINYINT(1)');
+const processed = processor.processValue(raw.status, "TINYINT(1)");
 console.log(processed); // true
 
-const processed2 = processor.processValue(0, 'TINYINT(1)');
+const processed2 = processor.processValue(0, "TINYINT(1)");
 console.log(processed2); // false
 ```
 
@@ -87,9 +89,9 @@ DATETIME 和 TIMESTAMP 列转换为 JavaScript Date 对象：
 
 ```javascript
 // 数据库: created_at DATETIME - 存储为 '2026-05-15 10:30:00'
-const raw = { id: 1, created_at: '2026-05-15 10:30:00' };
+const raw = { id: 1, created_at: "2026-05-15 10:30:00" };
 
-const processed = processor.processValue(raw.created_at, 'DATETIME');
+const processed = processor.processValue(raw.created_at, "DATETIME");
 console.log(processed instanceof Date); // true
 console.log(processed.toISOString()); // '2026-05-15T10:30:00.000Z'
 ```
@@ -102,7 +104,7 @@ JSON 列会自动从字符串解析为对象：
 // 数据库: metadata JSON - 存储为 '{"theme":"dark","lang":"zh"}'
 const raw = { id: 1, metadata: '{"theme":"dark","lang":"zh"}' };
 
-const processed = processor.processValue(raw.metadata, 'JSON');
+const processed = processor.processValue(raw.metadata, "JSON");
 console.log(processed); // { theme: 'dark', lang: 'zh' }
 ```
 
@@ -112,13 +114,13 @@ MySQL 的数值类型需要特殊处理以保持精度：
 
 ```javascript
 // DECIMAL 类型保持精度
-const raw = { price: '123.45' }; // 从数据库返回为字符串
-const processed = processor.processValue(raw.price, 'DECIMAL(10,2)');
+const raw = { price: "123.45" }; // 从数据库返回为字符串
+const processed = processor.processValue(raw.price, "DECIMAL(10,2)");
 console.log(processed); // 123.45 (number)
 
 // BIGINT 处理大整数
-const raw2 = { big_number: '9223372036854775807' };
-const processed2 = processor.processValue(raw2.big_number, 'BIGINT');
+const raw2 = { big_number: "9223372036854775807" };
+const processed2 = processor.processValue(raw2.big_number, "BIGINT");
 console.log(processed2); // BigInt 或 number，取决于大小
 ```
 
@@ -130,13 +132,13 @@ PostgreSQL 有丰富的数据类型系统：
 
 ```javascript
 // PostgreSQL 数组类型
-const raw = { tags: '{javascript,node.js,database}' };
-const processed = processor.processValue(raw.tags, 'TEXT[]');
+const raw = { tags: "{javascript,node.js,database}" };
+const processed = processor.processValue(raw.tags, "TEXT[]");
 console.log(processed); // ['javascript', 'node.js', 'database']
 
 // 整数数组
-const raw2 = { numbers: '{1,2,3,4,5}' };
-const processed2 = processor.processValue(raw2.numbers, 'INTEGER[]');
+const raw2 = { numbers: "{1,2,3,4,5}" };
+const processed2 = processor.processValue(raw2.numbers, "INTEGER[]");
 console.log(processed2); // [1, 2, 3, 4, 5]
 ```
 
@@ -145,7 +147,7 @@ console.log(processed2); // [1, 2, 3, 4, 5]
 ```javascript
 // JSONB 类型
 const raw = { data: '{"user_id":123,"preferences":{"theme":"dark"}}' };
-const processed = processor.processValue(raw.data, 'JSONB');
+const processed = processor.processValue(raw.data, "JSONB");
 console.log(processed); // { user_id: 123, preferences: { theme: 'dark' } }
 ```
 
@@ -153,8 +155,8 @@ console.log(processed); // { user_id: 123, preferences: { theme: 'dark' } }
 
 ```javascript
 // UUID 类型保持为字符串
-const raw = { uuid: '550e8400-e29b-41d4-a716-446655440000' };
-const processed = processor.processValue(raw.uuid, 'UUID');
+const raw = { uuid: "550e8400-e29b-41d4-a716-446655440000" };
+const processed = processor.processValue(raw.uuid, "UUID");
 console.log(processed); // '550e8400-e29b-41d4-a716-446655440000'
 ```
 
@@ -162,13 +164,13 @@ console.log(processed); // '550e8400-e29b-41d4-a716-446655440000'
 
 ```javascript
 // TIMESTAMP WITH TIME ZONE
-const raw = { created_at: '2026-05-15 10:30:00+08:00' };
-const processed = processor.processValue(raw.created_at, 'TIMESTAMPTZ');
+const raw = { created_at: "2026-05-15 10:30:00+08:00" };
+const processed = processor.processValue(raw.created_at, "TIMESTAMPTZ");
 console.log(processed instanceof Date); // true
 
 // TIME 类型
-const raw2 = { time_only: '14:30:00' };
-const processed2 = processor.processValue(raw2.time_only, 'TIME');
+const raw2 = { time_only: "14:30:00" };
+const processed2 = processor.processValue(raw2.time_only, "TIME");
 console.log(processed2); // '14:30:00' 或 Date 对象，取决于配置
 ```
 
@@ -180,11 +182,11 @@ SQLite 的动态类型系统需要特殊处理：
 
 ```javascript
 // SQLite 没有严格的列类型，需要根据值推断
-const raw = { 
-    id: 1,           // INTEGER
-    name: 'John',    // TEXT
-    active: 1,       // 可能是 BOOLEAN
-    score: 95.5      // REAL
+const raw = {
+  id: 1, // INTEGER
+  name: "John", // TEXT
+  active: 1, // 可能是 BOOLEAN
+  score: 95.5, // REAL
 };
 
 const processed = processor.processRow(raw);
@@ -196,13 +198,13 @@ console.log(processed);
 
 ```javascript
 // SQLite 将日期存储为文本或数字
-const raw = { 
-    created_text: '2026-05-15 10:30:00',
-    created_unix: 1684144200
+const raw = {
+  created_text: "2026-05-15 10:30:00",
+  created_unix: 1684144200,
 };
 
-const processed1 = processor.processValue(raw.created_text, 'DATETIME');
-const processed2 = processor.processValue(raw.created_unix, 'TIMESTAMP');
+const processed1 = processor.processValue(raw.created_text, "DATETIME");
+const processed2 = processor.processValue(raw.created_unix, "TIMESTAMP");
 
 console.log(processed1 instanceof Date); // true
 console.log(processed2 instanceof Date); // true
@@ -214,13 +216,13 @@ console.log(processed2 instanceof Date); // true
 
 ```javascript
 // 注册自定义类型转换器
-processor.addTypeConverter('CUSTOM_TYPE', (value, column) => {
-    // 自定义转换逻辑
-    return customConversion(value);
+processor.addTypeConverter("CUSTOM_TYPE", (value, column) => {
+  // 自定义转换逻辑
+  return customConversion(value);
 });
 
 // 使用自定义转换
-const processed = processor.processValue(rawValue, 'CUSTOM_TYPE');
+const processed = processor.processValue(rawValue, "CUSTOM_TYPE");
 ```
 
 ### 结果格式化选项
@@ -228,11 +230,11 @@ const processed = processor.processValue(rawValue, 'CUSTOM_TYPE');
 ```javascript
 // 配置处理器选项
 const processor = new MySQLProcessor({
-    convertTinyIntToBool: true,     // 将 TINYINT(1) 转换为布尔值
-    parseJSON: true,                // 自动解析 JSON 列
-    convertDatesToJS: true,         // 转换日期到 JavaScript Date
-    preserveUndefined: false,       // 将 undefined 转换为 null
-    trimStrings: true               // 自动修剪字符串空白
+  convertTinyIntToBool: true, // 将 TINYINT(1) 转换为布尔值
+  parseJSON: true, // 自动解析 JSON 列
+  convertDatesToJS: true, // 转换日期到 JavaScript Date
+  preserveUndefined: false, // 将 undefined 转换为 null
+  trimStrings: true, // 自动修剪字符串空白
 });
 ```
 
@@ -242,10 +244,10 @@ const processor = new MySQLProcessor({
 // 批量处理大量结果
 const batchProcessor = new BatchProcessor(processor);
 
-const largeResult = await connection.select('SELECT * FROM large_table');
+const largeResult = await connection.select("SELECT * FROM large_table");
 const processed = await batchProcessor.processLarge(largeResult, {
-    batchSize: 1000,        // 每批处理 1000 行
-    parallel: 4             // 并行处理 4 个批次
+  batchSize: 1000, // 每批处理 1000 行
+  parallel: 4, // 并行处理 4 个批次
 });
 ```
 
@@ -253,7 +255,7 @@ const processed = await batchProcessor.processLarge(largeResult, {
 
 ```javascript
 // 处理查询元数据
-const result = await connection.selectWithMeta('SELECT * FROM users');
+const result = await connection.selectWithMeta("SELECT * FROM users");
 const processed = processor.processWithMetadata(result);
 
 console.log(processed);
@@ -277,19 +279,19 @@ console.log(processed);
 processor.enableTypeCache();
 
 // 预热类型缓存
-await processor.warmupTypeCache(['users', 'posts', 'comments']);
+await processor.warmupTypeCache(["users", "posts", "comments"]);
 ```
 
 ### 字段映射
 
 ```javascript
 // 预定义字段映射以减少类型检测开销
-processor.setFieldMap('users', {
-    id: 'INTEGER',
-    name: 'VARCHAR',
-    active: 'TINYINT(1)',
-    created_at: 'DATETIME',
-    metadata: 'JSON'
+processor.setFieldMap("users", {
+  id: "INTEGER",
+  name: "VARCHAR",
+  active: "TINYINT(1)",
+  created_at: "DATETIME",
+  metadata: "JSON",
 });
 ```
 
@@ -297,15 +299,15 @@ processor.setFieldMap('users', {
 
 ```javascript
 // 对大型结果集使用流式处理
-const stream = connection.selectStream('SELECT * FROM large_table');
+const stream = connection.selectStream("SELECT * FROM large_table");
 
-stream.on('data', (row) => {
-    const processed = processor.processRow(row);
-    // 处理单行数据
+stream.on("data", (row) => {
+  const processed = processor.processRow(row);
+  // 处理单行数据
 });
 
-stream.on('end', () => {
-    console.log('处理完成');
+stream.on("end", () => {
+  console.log("处理完成");
 });
 ```
 
@@ -315,13 +317,13 @@ stream.on('end', () => {
 
 ```javascript
 try {
-    const processed = processor.processValue(invalidValue, 'INTEGER');
+  const processed = processor.processValue(invalidValue, "INTEGER");
 } catch (error) {
-    if (error instanceof TypeConversionError) {
-        console.error('类型转换失败:', error.message);
-        console.error('原始值:', error.originalValue);
-        console.error('目标类型:', error.targetType);
-    }
+  if (error instanceof TypeConversionError) {
+    console.error("类型转换失败:", error.message);
+    console.error("原始值:", error.originalValue);
+    console.error("目标类型:", error.targetType);
+  }
 }
 ```
 
@@ -330,8 +332,8 @@ try {
 ```javascript
 // 配置未知类型的默认行为
 processor.setUnknownTypeHandler((value, type) => {
-    console.warn(`未知类型 ${type}，返回原始值`);
-    return value;
+  console.warn(`未知类型 ${type}，返回原始值`);
+  return value;
 });
 ```
 
@@ -340,10 +342,10 @@ processor.setUnknownTypeHandler((value, type) => {
 ```javascript
 // 启用数据验证
 processor.enableValidation({
-    validateUTF8: true,         // 验证 UTF-8 编码
-    validateJSON: true,         // 验证 JSON 格式
-    validateDates: true,        // 验证日期格式
-    validateNumbers: true       // 验证数字范围
+  validateUTF8: true, // 验证 UTF-8 编码
+  validateJSON: true, // 验证 JSON 格式
+  validateDates: true, // 验证日期格式
+  validateNumbers: true, // 验证数字范围
 });
 ```
 
@@ -352,58 +354,58 @@ processor.enableValidation({
 ### 扩展基础 Processor
 
 ```javascript
-import Processor from './Processor.js';
+import Processor from "./Processor.js";
 
 class CustomProcessor extends Processor {
-    /**
-     * 处理自定义数据类型
-     */
-    processValue(value, type, column = null) {
-        switch (type) {
-            case 'CUSTOM_ENUM':
-                return this.processEnum(value);
-            case 'ENCRYPTED_TEXT':
-                return this.decryptValue(value);
-            default:
-                return super.processValue(value, type, column);
-        }
+  /**
+   * 处理自定义数据类型
+   */
+  processValue(value, type, column = null) {
+    switch (type) {
+      case "CUSTOM_ENUM":
+        return this.processEnum(value);
+      case "ENCRYPTED_TEXT":
+        return this.decryptValue(value);
+      default:
+        return super.processValue(value, type, column);
     }
-    
-    /**
-     * 处理枚举类型
-     */
-    processEnum(value) {
-        const enumMap = {
-            0: 'inactive',
-            1: 'active',
-            2: 'suspended'
-        };
-        return enumMap[value] || 'unknown';
-    }
-    
-    /**
-     * 解密值
-     */
-    decryptValue(encryptedValue) {
-        return decrypt(encryptedValue);
-    }
+  }
+
+  /**
+   * 处理枚举类型
+   */
+  processEnum(value) {
+    const enumMap = {
+      0: "inactive",
+      1: "active",
+      2: "suspended",
+    };
+    return enumMap[value] || "unknown";
+  }
+
+  /**
+   * 解密值
+   */
+  decryptValue(encryptedValue) {
+    return decrypt(encryptedValue);
+  }
 }
 ```
 
 ### 注册自定义 Processor
 
 ```javascript
-import Database from './Database.js';
-import CustomProcessor from './CustomProcessor.js';
+import Database from "./Database.js";
+import CustomProcessor from "./CustomProcessor.js";
 
 // 注册自定义 Processor
-Database.registerProcessor('custom', CustomProcessor);
+Database.registerProcessor("custom", CustomProcessor);
 
 // 使用自定义 Processor
 const db = await Database.connect({
-    driver: 'custom',
-    processor: 'custom',
-    // ... 其他配置
+  driver: "custom",
+  processor: "custom",
+  // ... 其他配置
 });
 ```
 
@@ -413,26 +415,26 @@ const db = await Database.connect({
 
 ```javascript
 const processor = new MySQLProcessor({
-    // 布尔值转换
-    convertTinyIntToBool: true,
-    tinyIntBooleanFields: ['active', 'verified', 'enabled'],
-    
-    // 日期时间处理
-    timezone: 'UTC',
-    convertDatesToJS: true,
-    dateFormat: 'YYYY-MM-DD HH:mm:ss',
-    
-    // JSON 处理
-    parseJSON: true,
-    jsonFields: ['metadata', 'settings', 'data'],
-    
-    // 数值处理
-    convertNumericStrings: true,
-    preserveDecimals: true,
-    
-    // 字符串处理
-    trimStrings: false,
-    emptyStringToNull: false
+  // 布尔值转换
+  convertTinyIntToBool: true,
+  tinyIntBooleanFields: ["active", "verified", "enabled"],
+
+  // 日期时间处理
+  timezone: "UTC",
+  convertDatesToJS: true,
+  dateFormat: "YYYY-MM-DD HH:mm:ss",
+
+  // JSON 处理
+  parseJSON: true,
+  jsonFields: ["metadata", "settings", "data"],
+
+  // 数值处理
+  convertNumericStrings: true,
+  preserveDecimals: true,
+
+  // 字符串处理
+  trimStrings: false,
+  emptyStringToNull: false,
 });
 ```
 
@@ -440,25 +442,25 @@ const processor = new MySQLProcessor({
 
 ```javascript
 const processor = new PostgreSQLProcessor({
-    // 数组处理
-    parseArrays: true,
-    arrayNullHandling: 'empty', // 'empty' | 'null' | 'keep'
-    
-    // JSON 处理
-    parseJSONB: true,
-    jsonDateReviver: (key, value) => {
-        if (key.endsWith('_at') && typeof value === 'string') {
-            return new Date(value);
-        }
-        return value;
-    },
-    
-    // UUID 处理
-    parseUUID: false, // 保持为字符串
-    
-    // 时区处理
-    timezone: 'Asia/Shanghai',
-    convertTimestamps: true
+  // 数组处理
+  parseArrays: true,
+  arrayNullHandling: "empty", // 'empty' | 'null' | 'keep'
+
+  // JSON 处理
+  parseJSONB: true,
+  jsonDateReviver: (key, value) => {
+    if (key.endsWith("_at") && typeof value === "string") {
+      return new Date(value);
+    }
+    return value;
+  },
+
+  // UUID 处理
+  parseUUID: false, // 保持为字符串
+
+  // 时区处理
+  timezone: "Asia/Shanghai",
+  convertTimestamps: true,
 });
 ```
 
@@ -466,17 +468,17 @@ const processor = new PostgreSQLProcessor({
 
 ```javascript
 const processor = new SQLiteProcessor({
-    // 类型推断
-    enableTypeInference: true,
-    inferBooleanFromInteger: true,
-    
-    // 日期处理
-    dateStorageFormat: 'text', // 'text' | 'unix' | 'iso'
-    convertDates: true,
-    
-    // 字符串处理
-    trimStrings: true,
-    convertEmptyStringToNull: true
+  // 类型推断
+  enableTypeInference: true,
+  inferBooleanFromInteger: true,
+
+  // 日期处理
+  dateStorageFormat: "text", // 'text' | 'unix' | 'iso'
+  convertDates: true,
+
+  // 字符串处理
+  trimStrings: true,
+  convertEmptyStringToNull: true,
 });
 ```
 
@@ -490,7 +492,7 @@ processor.enableDebug();
 
 // 设置调试回调
 processor.onDebug((event, data) => {
-    console.log(`[${event}]`, data);
+  console.log(`[${event}]`, data);
 });
 
 // 处理结果时查看调试信息
@@ -519,15 +521,17 @@ console.log(stats);
 ### 常见问题
 
 **类型转换失败：**
+
 ```javascript
 // 检查原始值和目标类型
 processor.onTypeError((error, value, type) => {
-    console.error(`无法将 ${value} 转换为 ${type}`);
-    return null; // 返回默认值
+  console.error(`无法将 ${value} 转换为 ${type}`);
+  return null; // 返回默认值
 });
 ```
 
 **性能问题：**
+
 ```javascript
 // 启用缓存和批量处理
 processor.enableCache();
@@ -535,17 +539,18 @@ processor.setBatchSize(100);
 
 // 监控处理时间
 processor.onSlowProcess((duration, rowCount) => {
-    console.warn(`处理 ${rowCount} 行耗时 ${duration}ms`);
+  console.warn(`处理 ${rowCount} 行耗时 ${duration}ms`);
 });
 ```
 
 **内存使用：**
+
 ```javascript
 // 启用流式处理对大结果集
 if (resultSize > 10000) {
-    return processor.processStream(result);
+  return processor.processStream(result);
 } else {
-    return processor.processAll(result);
+  return processor.processAll(result);
 }
 ```
 

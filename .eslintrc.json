@@ -1,0 +1,45 @@
+{
+  "env": {
+    "node": true,
+    "es2022": true,
+    "jest": true
+  },
+  "extends": ["eslint:recommended"],
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "rules": {
+    "indent": ["warn", 4],
+    "linebreak-style": "off",
+    "quotes": ["warn", "single"],
+    "semi": ["error", "always"],
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-console": "off",
+    "no-debugger": "error",
+    "no-var": "error",
+    "prefer-const": "error",
+    "eqeqeq": ["warn", "always"],
+    "curly": ["error", "all"],
+    "brace-style": ["warn", "1tbs"],
+    "space-before-blocks": "warn",
+    "keyword-spacing": "warn",
+    "space-infix-ops": "warn",
+    "comma-spacing": "warn",
+    "object-curly-spacing": ["warn", "always"],
+    "array-bracket-spacing": ["warn", "never"],
+    "no-trailing-spaces": "warn",
+    "eol-last": "warn",
+    "no-case-declarations": "warn",
+    "no-dupe-class-members": "warn",
+    "no-prototype-builtins": "warn"
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    "coverage/",
+    "*.min.js",
+    "dist/",
+    "examples/",
+    "babel.config.js"
+  ]
+}

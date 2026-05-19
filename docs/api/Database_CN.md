@@ -28,41 +28,41 @@
 
 ```javascript
 // 方式1：使用配置对象（推荐）
-Database.connect(config)
+Database.connect(config);
 
 // 方式2：使用独立参数
-Database.connect(driver, host, username, password, database, port, charset)
+Database.connect(driver, host, username, password, database, port, charset);
 ```
 
 #### 参数
 
 **配置对象方式：**
 
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| `config` | `Object` | ✅ | - | 数据库配置对象 |
-| `config.driver` | `string` | ✅ | - | 数据库驱动 (`'mysql'`\|`'postgres'`\|`'postgresql'`\|`'sqlite'`) |
-| `config.host` | `string` | ❌ | `'localhost'` | 数据库主机地址 |
-| `config.username` | `string` | ❌ | `''` | 数据库用户名 |
-| `config.password` | `string` | ❌ | `''` | 数据库密码 |
-| `config.database` | `string` | ❌ | `''` | 数据库名称 |
-| `config.port` | `number` | ❌ | 自动检测 | 数据库端口 |
-| `config.charset` | `string` | ❌ | `'utf8mb4'` | 字符集 |
-| `config.filename` | `string` | ❌ | - | SQLite数据库文件路径 |
-| `config.pool` | `Object` | ❌ | - | 连接池配置 |
-| `config.ssl` | `Object` | ❌ | - | SSL配置（PostgreSQL） |
+| 参数              | 类型     | 必填 | 默认值        | 描述                                                             |
+| ----------------- | -------- | ---- | ------------- | ---------------------------------------------------------------- |
+| `config`          | `Object` | ✅   | -             | 数据库配置对象                                                   |
+| `config.driver`   | `string` | ✅   | -             | 数据库驱动 (`'mysql'`\|`'postgres'`\|`'postgresql'`\|`'sqlite'`) |
+| `config.host`     | `string` | ❌   | `'localhost'` | 数据库主机地址                                                   |
+| `config.username` | `string` | ❌   | `''`          | 数据库用户名                                                     |
+| `config.password` | `string` | ❌   | `''`          | 数据库密码                                                       |
+| `config.database` | `string` | ❌   | `''`          | 数据库名称                                                       |
+| `config.port`     | `number` | ❌   | 自动检测      | 数据库端口                                                       |
+| `config.charset`  | `string` | ❌   | `'utf8mb4'`   | 字符集                                                           |
+| `config.filename` | `string` | ❌   | -             | SQLite数据库文件路径                                             |
+| `config.pool`     | `Object` | ❌   | -             | 连接池配置                                                       |
+| `config.ssl`      | `Object` | ❌   | -             | SSL配置（PostgreSQL）                                            |
 
 **独立参数方式：**
 
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| `driver` | `string` | ✅ | - | 数据库驱动名称 |
-| `host` | `string` | ❌ | `'localhost'` | 数据库主机地址 |
-| `username` | `string` | ❌ | `''` | 数据库用户名 |
-| `password` | `string` | ❌ | `''` | 数据库密码 |
-| `database` | `string` | ❌ | `''` | 数据库名称 |
-| `port` | `number` | ❌ | 自动检测 | 数据库端口 |
-| `charset` | `string` | ❌ | `'utf8mb4'` | 字符集 |
+| 参数       | 类型     | 必填 | 默认值        | 描述           |
+| ---------- | -------- | ---- | ------------- | -------------- |
+| `driver`   | `string` | ✅   | -             | 数据库驱动名称 |
+| `host`     | `string` | ❌   | `'localhost'` | 数据库主机地址 |
+| `username` | `string` | ❌   | `''`          | 数据库用户名   |
+| `password` | `string` | ❌   | `''`          | 数据库密码     |
+| `database` | `string` | ❌   | `''`          | 数据库名称     |
+| `port`     | `number` | ❌   | 自动检测      | 数据库端口     |
+| `charset`  | `string` | ❌   | `'utf8mb4'`   | 字符集         |
 
 #### 返回值
 
@@ -70,19 +70,19 @@ Database.connect(driver, host, username, password, database, port, charset)
 
 #### 异常
 
-| 异常类型 | 触发条件 | 解决方案 |
-|----------|----------|----------|
-| `Error` | 不支持的数据库驱动 | 检查driver参数是否为`'mysql'`、`'postgres'`、`'postgresql'`或`'sqlite'` |
-| `Error` | 数据库驱动包未安装 | 按提示执行npm安装命令 |
-| `Error` | 数据库连接失败 | 检查连接参数、网络连接和数据库服务状态 |
+| 异常类型 | 触发条件           | 解决方案                                                                |
+| -------- | ------------------ | ----------------------------------------------------------------------- |
+| `Error`  | 不支持的数据库驱动 | 检查driver参数是否为`'mysql'`、`'postgres'`、`'postgresql'`或`'sqlite'` |
+| `Error`  | 数据库驱动包未安装 | 按提示执行npm安装命令                                                   |
+| `Error`  | 数据库连接失败     | 检查连接参数、网络连接和数据库服务状态                                  |
 
 #### 默认端口
 
-| 数据库 | 默认端口 |
-|--------|----------|
-| MySQL | 3306 |
-| PostgreSQL | 5432 |
-| SQLite | 不使用端口 |
+| 数据库     | 默认端口   |
+| ---------- | ---------- |
+| MySQL      | 3306       |
+| PostgreSQL | 5432       |
+| SQLite     | 不使用端口 |
 
 ## 使用示例
 
@@ -91,38 +91,38 @@ Database.connect(driver, host, username, password, database, port, charset)
 ```javascript
 // 基本MySQL连接
 const db = await Database.connect({
-    driver: 'mysql',
-    host: 'localhost',
-    port: 3306,
-    username: 'root',
-    password: 'password',
-    database: 'myapp'
+  driver: "mysql",
+  host: "localhost",
+  port: 3306,
+  username: "root",
+  password: "password",
+  database: "myapp",
 });
 
 // 使用连接池的MySQL连接
 const dbWithPool = await Database.connect({
-    driver: 'mysql',
-    host: 'localhost',
-    username: 'root',
-    password: 'password',
-    database: 'myapp',
-    pool: {
-        min: 2,      // 最小连接数
-        max: 10,     // 最大连接数
-        acquire: 30000,  // 获取连接超时时间(ms)
-        idle: 10000  // 空闲连接超时时间(ms)
-    }
+  driver: "mysql",
+  host: "localhost",
+  username: "root",
+  password: "password",
+  database: "myapp",
+  pool: {
+    min: 2, // 最小连接数
+    max: 10, // 最大连接数
+    acquire: 30000, // 获取连接超时时间(ms)
+    idle: 10000, // 空闲连接超时时间(ms)
+  },
 });
 
 // 使用独立参数
 const dbParams = await Database.connect(
-    'mysql',
-    'localhost', 
-    'root', 
-    'password', 
-    'myapp',
-    3306,
-    'utf8mb4'
+  "mysql",
+  "localhost",
+  "root",
+  "password",
+  "myapp",
+  3306,
+  "utf8mb4",
 );
 ```
 
@@ -131,26 +131,26 @@ const dbParams = await Database.connect(
 ```javascript
 // 基本PostgreSQL连接
 const db = await Database.connect({
-    driver: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'postgres',
-    password: 'password',
-    database: 'myapp'
+  driver: "postgres",
+  host: "localhost",
+  port: 5432,
+  username: "postgres",
+  password: "password",
+  database: "myapp",
 });
 
 // 带SSL的PostgreSQL连接
 const dbSSL = await Database.connect({
-    driver: 'postgresql',
-    host: 'production-server.com',
-    port: 5432,
-    username: 'appuser',
-    password: 'securepass',
-    database: 'production_db',
-    ssl: {
-        require: true,
-        rejectUnauthorized: false
-    }
+  driver: "postgresql",
+  host: "production-server.com",
+  port: 5432,
+  username: "appuser",
+  password: "securepass",
+  database: "production_db",
+  ssl: {
+    require: true,
+    rejectUnauthorized: false,
+  },
 });
 ```
 
@@ -159,20 +159,20 @@ const dbSSL = await Database.connect({
 ```javascript
 // SQLite文件数据库
 const db = await Database.connect({
-    driver: 'sqlite',
-    filename: './data/app.sqlite'
+  driver: "sqlite",
+  filename: "./data/app.sqlite",
 });
 
 // SQLite内存数据库
 const memoryDb = await Database.connect({
-    driver: 'sqlite',
-    filename: ':memory:'
+  driver: "sqlite",
+  filename: ":memory:",
 });
 
 // 临时SQLite数据库
 const tempDb = await Database.connect({
-    driver: 'sqlite',
-    filename: ''  // 空字符串表示临时数据库
+  driver: "sqlite",
+  filename: "", // 空字符串表示临时数据库
 });
 ```
 
@@ -183,47 +183,47 @@ const tempDb = await Database.connect({
 ```javascript
 // 1. 建立连接
 const db = await Database.connect({
-    driver: 'mysql',
-    host: 'localhost',
-    username: 'root',
-    password: 'password',
-    database: 'testdb'
+  driver: "mysql",
+  host: "localhost",
+  username: "root",
+  password: "password",
+  database: "testdb",
 });
 
 // 2. 使用查询构建器
-const users = await db.table('users')
-    .where('status', 'active')
-    .orderBy('created_at', 'desc')
-    .limit(10)
-    .get();
+const users = await db
+  .table("users")
+  .where("status", "active")
+  .orderBy("created_at", "desc")
+  .limit(10)
+  .get();
 
-console.log('活跃用户:', users);
+console.log("活跃用户:", users);
 ```
 
 ### 错误处理最佳实践
 
 ```javascript
 try {
-    const db = await Database.connect({
-        driver: 'mysql',
-        host: 'localhost',
-        username: 'root',
-        password: 'wrongpassword',
-        database: 'testdb'
-    });
-    
-    // 执行查询...
-    
+  const db = await Database.connect({
+    driver: "mysql",
+    host: "localhost",
+    username: "root",
+    password: "wrongpassword",
+    database: "testdb",
+  });
+
+  // 执行查询...
 } catch (error) {
-    if (error.message.includes('数据库驱动未安装')) {
-        console.error('请安装MySQL驱动: npm install mysql2');
-    } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
-        console.error('数据库认证失败，请检查用户名和密码');
-    } else if (error.code === 'ECONNREFUSED') {
-        console.error('无法连接数据库，请检查服务是否运行');
-    } else {
-        console.error('数据库连接错误:', error.message);
-    }
+  if (error.message.includes("数据库驱动未安装")) {
+    console.error("请安装MySQL驱动: npm install mysql2");
+  } else if (error.code === "ER_ACCESS_DENIED_ERROR") {
+    console.error("数据库认证失败，请检查用户名和密码");
+  } else if (error.code === "ECONNREFUSED") {
+    console.error("无法连接数据库，请检查服务是否运行");
+  } else {
+    console.error("数据库连接错误:", error.message);
+  }
 }
 ```
 
@@ -232,35 +232,35 @@ try {
 ```javascript
 // config/database.js
 const config = {
-    development: {
-        driver: 'sqlite',
-        filename: './dev-database.sqlite'
+  development: {
+    driver: "sqlite",
+    filename: "./dev-database.sqlite",
+  },
+
+  testing: {
+    driver: "sqlite",
+    filename: ":memory:",
+  },
+
+  production: {
+    driver: "mysql",
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT || 3306,
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    charset: "utf8mb4",
+    pool: {
+      min: 2,
+      max: 10,
+      acquire: 30000,
+      idle: 10000,
     },
-    
-    testing: {
-        driver: 'sqlite',
-        filename: ':memory:'
-    },
-    
-    production: {
-        driver: 'mysql',
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT || 3306,
-        username: process.env.DB_USERNAME,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_DATABASE,
-        charset: 'utf8mb4',
-        pool: {
-            min: 2,
-            max: 10,
-            acquire: 30000,
-            idle: 10000
-        }
-    }
+  },
 };
 
 // 使用环境配置
-const env = process.env.NODE_ENV || 'development';
+const env = process.env.NODE_ENV || "development";
 const db = await Database.connect(config[env]);
 ```
 
@@ -274,7 +274,7 @@ const db = await Database.connect(config[env]);
 # MySQL
 npm install mysql2
 
-# PostgreSQL  
+# PostgreSQL
 npm install pg
 
 # SQLite
@@ -283,11 +283,11 @@ npm install sqlite3
 
 ### 驱动选择
 
-| 数据库 | 推荐驱动 | 说明 |
-|--------|----------|------|
-| MySQL | `mysql2` | 支持Promise、性能更好 |
-| PostgreSQL | `pg` | 官方推荐的Node.js驱动 |
-| SQLite | `sqlite3` | 标准SQLite驱动 |
+| 数据库     | 推荐驱动  | 说明                  |
+| ---------- | --------- | --------------------- |
+| MySQL      | `mysql2`  | 支持Promise、性能更好 |
+| PostgreSQL | `pg`      | 官方推荐的Node.js驱动 |
+| SQLite     | `sqlite3` | 标准SQLite驱动        |
 
 ## 性能提示
 
@@ -297,16 +297,16 @@ npm install sqlite3
 
 ```javascript
 const db = await Database.connect({
-    driver: 'mysql',
-    // ... 其他配置
-    pool: {
-        min: 2,           // 最小连接数
-        max: 10,          // 最大连接数  
-        acquire: 30000,   // 获取连接超时时间
-        idle: 10000,      // 空闲超时时间
-        evict: 1000,      // 检测间隔
-        handleDisconnects: true  // 自动处理断连
-    }
+  driver: "mysql",
+  // ... 其他配置
+  pool: {
+    min: 2, // 最小连接数
+    max: 10, // 最大连接数
+    acquire: 30000, // 获取连接超时时间
+    idle: 10000, // 空闲超时时间
+    evict: 1000, // 检测间隔
+    handleDisconnects: true, // 自动处理断连
+  },
 });
 ```
 
@@ -317,14 +317,14 @@ const db = await Database.connect({
 ```javascript
 // ❌ 错误做法 - 频繁创建连接
 for (let i = 0; i < 100; i++) {
-    const db = await Database.connect(config);
-    // 执行查询...
+  const db = await Database.connect(config);
+  // 执行查询...
 }
 
 // ✅ 正确做法 - 复用连接
 const db = await Database.connect(config);
 for (let i = 0; i < 100; i++) {
-    // 执行查询...
+  // 执行查询...
 }
 ```
 
@@ -347,6 +347,7 @@ Error: connect ETIMEDOUT
 ```
 
 **解决方案**：
+
 - 检查数据库服务是否运行
 - 检查防火墙设置
 - 验证主机地址和端口
@@ -358,6 +359,7 @@ Error: ER_ACCESS_DENIED_ERROR
 ```
 
 **解决方案**：
+
 - 检查用户名和密码
 - 确认用户有访问数据库的权限
 - 检查主机允许连接的IP范围
@@ -369,6 +371,7 @@ Error: ER_BAD_DB_ERROR: Unknown database 'xxx'
 ```
 
 **解决方案**：
+
 - 确认数据库名称正确
 - 创建数据库或使用存在的数据库
 
@@ -378,53 +381,53 @@ Error: ER_BAD_DB_ERROR: Unknown database 'xxx'
 
 ```typescript
 interface DatabaseConfig {
-    driver: 'mysql' | 'postgres' | 'postgresql' | 'sqlite';
-    host?: string;
-    port?: number;
-    username?: string;
-    password?: string;
-    database?: string;
-    charset?: string;
-    filename?: string;  // SQLite only
-    pool?: PoolConfig;
-    ssl?: SSLConfig;    // PostgreSQL only
+  driver: "mysql" | "postgres" | "postgresql" | "sqlite";
+  host?: string;
+  port?: number;
+  username?: string;
+  password?: string;
+  database?: string;
+  charset?: string;
+  filename?: string; // SQLite only
+  pool?: PoolConfig;
+  ssl?: SSLConfig; // PostgreSQL only
 }
 
 interface PoolConfig {
-    min?: number;
-    max?: number;
-    acquire?: number;
-    idle?: number;
-    evict?: number;
-    handleDisconnects?: boolean;
+  min?: number;
+  max?: number;
+  acquire?: number;
+  idle?: number;
+  evict?: number;
+  handleDisconnects?: boolean;
 }
 
 interface SSLConfig {
-    require?: boolean;
-    rejectUnauthorized?: boolean;
-    ca?: string;
-    cert?: string;
-    key?: string;
+  require?: boolean;
+  rejectUnauthorized?: boolean;
+  ca?: string;
+  cert?: string;
+  key?: string;
 }
 
 class Database {
-    static connect(config: DatabaseConfig): Promise<Builder>;
-    static connect(
-        driver: string,
-        host?: string,
-        username?: string,
-        password?: string,
-        database?: string,
-        port?: number,
-        charset?: string
-    ): Promise<Builder>;
+  static connect(config: DatabaseConfig): Promise<Builder>;
+  static connect(
+    driver: string,
+    host?: string,
+    username?: string,
+    password?: string,
+    database?: string,
+    port?: number,
+    charset?: string,
+  ): Promise<Builder>;
 }
 ```
 
 ## 版本历史
 
-| 版本 | 日期 | 变更说明 |
-|------|------|----------|
+| 版本  | 日期       | 变更说明                                |
+| ----- | ---------- | --------------------------------------- |
 | 1.0.0 | 2024-01-01 | 初始版本，支持MySQL、PostgreSQL、SQLite |
 
 ## 相关文档

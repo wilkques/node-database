@@ -18,14 +18,16 @@ The Processor system transforms raw database query results into properly typed J
 ### Processing SELECT Results
 
 ```javascript
-import MySQLProcessor from './lib/queries/processors/MySQLProcessor.js';
-import Connection from './lib/Connection.js';
+import MySQLProcessor from "./lib/queries/processors/MySQLProcessor.js";
+import Connection from "./lib/Connection.js";
 
-const connection = new Connection({ /* config */ });
+const connection = new Connection({
+  /* config */
+});
 const processor = new MySQLProcessor();
 
 // Execute query and process results
-const result = await connection.select('SELECT * FROM users');
+const result = await connection.select("SELECT * FROM users");
 const processedResults = processor.processSelect(result, connection.fields);
 
 console.log(processedResults);
@@ -36,18 +38,18 @@ console.log(processedResults);
 
 ```javascript
 // Simple INSERT
-const result = await connection.insert('INSERT INTO users ...');
+const result = await connection.insert("INSERT INTO users ...");
 const processed = processor.processInsert(result);
 
 // INSERT and get the auto-increment ID
-const id = await connection.insertGetId('INSERT INTO users ...', [], 'id');
+const id = await connection.insertGetId("INSERT INTO users ...", [], "id");
 console.log(id); // The generated ID
 ```
 
 ### Processing UPDATE Results
 
 ```javascript
-const result = await connection.update('UPDATE users SET ...');
+const result = await connection.update("UPDATE users SET ...");
 const affected = processor.processUpdate(result);
 console.log(affected.affectedRows); // Number of affected rows
 ```
@@ -55,7 +57,7 @@ console.log(affected.affectedRows); // Number of affected rows
 ### Processing DELETE Results
 
 ```javascript
-const result = await connection.delete('DELETE FROM users ...');
+const result = await connection.delete("DELETE FROM users ...");
 const deleted = processor.processDelete(result);
 console.log(deleted.affectedRows); // Number of deleted rows
 ```
@@ -74,10 +76,10 @@ TINYINT(1) columns are commonly used for boolean values in MySQL:
 // Database: status TINYINT(1) - stored as 0 or 1
 const raw = { id: 1, status: 1 };
 
-const processed = processor.processValue(raw.status, 'TINYINT(1)');
+const processed = processor.processValue(raw.status, "TINYINT(1)");
 console.log(processed); // true
 
-const processed2 = processor.processValue(0, 'TINYINT(1)');
+const processed2 = processor.processValue(0, "TINYINT(1)");
 console.log(processed2); // false
 ```
 
@@ -87,9 +89,9 @@ DATETIME and TIMESTAMP columns are converted to JavaScript Date objects:
 
 ```javascript
 // Database: created_at DATETIME - stored as '2026-05-15 10:30:00'
-const raw = { id: 1, created_at: '2026-05-15 10:30:00' };
+const raw = { id: 1, created_at: "2026-05-15 10:30:00" };
 
-const processed = processor.processValue(raw.created_at, 'DATETIME');
+const processed = processor.processValue(raw.created_at, "DATETIME");
 console.log(processed instanceof Date); // true
 console.log(processed.toISOString()); // '2026-05-15T10:30:00.000Z'
 ```
@@ -102,7 +104,7 @@ JSON columns are automatically parsed from strings to objects:
 // Database: metadata JSON - stored as '{"tags":["vip","premium"]}'
 const raw = { id: 1, metadata: '{"tags":["vip","premium"]}' };
 
-const processed = processor.processValue(raw.metadata, 'JSON');
+const processed = processor.processValue(raw.metadata, "JSON");
 console.log(processed); // { tags: ['vip', 'premium'] }
 console.log(typeof processed); // 'object'
 ```
@@ -113,9 +115,9 @@ DECIMAL columns are converted to JavaScript numbers:
 
 ```javascript
 // Database: price DECIMAL(10,2) - stored as '99.99'
-const raw = { id: 1, price: '99.99' };
+const raw = { id: 1, price: "99.99" };
 
-const processed = processor.processValue(raw.price, 'DECIMAL(10,2)');
+const processed = processor.processValue(raw.price, "DECIMAL(10,2)");
 console.log(processed); // 99.99
 console.log(typeof processed); // 'number'
 ```
@@ -126,10 +128,13 @@ When inserting records and retrieving the auto-increment ID:
 
 ```javascript
 // Execute INSERT
-const result = await connection.insert('INSERT INTO users (name) VALUES (?)');
+const result = await connection.insert("INSERT INTO users (name) VALUES (?)");
 
 // MySQL returns: { insertId: 42, affectedRows: 1 }
-const processedId = processor.processInsertGetId(result, connection.lastInsertId);
+const processedId = processor.processInsertGetId(
+  result,
+  connection.lastInsertId,
+);
 console.log(processedId); // 42
 ```
 
@@ -143,9 +148,9 @@ PostgreSQL array types (marked with `[]` in type signature) are converted to Jav
 
 ```javascript
 // Database: tags TEXT[] - stored in PostgreSQL's array format
-const raw = { id: 1, tags: ['vip', 'premium', 'beta'] };
+const raw = { id: 1, tags: ["vip", "premium", "beta"] };
 
-const processed = processor.processValue(raw.tags, 'TEXT[]');
+const processed = processor.processValue(raw.tags, "TEXT[]");
 console.log(Array.isArray(processed)); // true
 console.log(processed); // ['vip', 'premium', 'beta']
 ```
@@ -158,7 +163,7 @@ PostgreSQL's JSON and JSONB types are parsed to JavaScript objects:
 // Database: metadata JSONB - stored as {'nested': {'value': true}}
 const raw = { id: 1, metadata: { nested: { value: true } } };
 
-const processed = processor.processValue(raw.metadata, 'JSONB');
+const processed = processor.processValue(raw.metadata, "JSONB");
 console.log(processed.nested.value); // true
 ```
 
@@ -168,9 +173,9 @@ PostgreSQL's UUID type is preserved as a string:
 
 ```javascript
 // Database: user_id UUID - stored as '550e8400-e29b-41d4-a716-446655440000'
-const raw = { user_id: '550e8400-e29b-41d4-a716-446655440000' };
+const raw = { user_id: "550e8400-e29b-41d4-a716-446655440000" };
 
-const processed = processor.processValue(raw.user_id, 'UUID');
+const processed = processor.processValue(raw.user_id, "UUID");
 console.log(typeof processed); // 'string'
 ```
 
@@ -197,9 +202,9 @@ SQLite stores numbers as strings, requiring conversion based on column type:
 
 ```javascript
 // Database: age INTEGER - stored as '25' (string)
-const raw = { id: '1', name: 'John', age: '25' };
+const raw = { id: "1", name: "John", age: "25" };
 
-const processedAge = processor.processValue(raw.age, 'INTEGER');
+const processedAge = processor.processValue(raw.age, "INTEGER");
 console.log(processedAge); // 25
 console.log(typeof processedAge); // 'number'
 ```
@@ -212,10 +217,10 @@ SQLite uses 1 and 0 for boolean values:
 // Database: active INTEGER - stored as 1 or 0
 const raw = { id: 1, active: 1 };
 
-const processed = processor.processValue(raw.active, 'BOOLEAN');
+const processed = processor.processValue(raw.active, "BOOLEAN");
 console.log(processed); // true
 
-const processed2 = processor.processValue(0, 'BOOLEAN');
+const processed2 = processor.processValue(0, "BOOLEAN");
 console.log(processed2); // false
 ```
 
@@ -241,12 +246,14 @@ console.log(id); // 42
 Processes SELECT query results, converting all values to proper JavaScript types.
 
 **Parameters:**
+
 - `result` (array) - Raw result rows from database
 - `columns` (array) - Column metadata including types
 
 **Returns:** (array) Processed rows with typed values
 
 **Example:**
+
 ```javascript
 const rows = processor.processSelect(rawResult, connection.fields);
 ```
@@ -256,11 +263,13 @@ const rows = processor.processSelect(rawResult, connection.fields);
 Processes INSERT query results.
 
 **Parameters:**
+
 - `result` (object) - Raw result from database
 
 **Returns:** (object) Result object with insertId and affectedRows
 
 **Example:**
+
 ```javascript
 const insertResult = processor.processInsert(result);
 console.log(insertResult.insertId);
@@ -271,11 +280,13 @@ console.log(insertResult.insertId);
 Processes UPDATE query results.
 
 **Parameters:**
+
 - `result` (object) - Raw result from database
 
 **Returns:** (object) Result object with affectedRows
 
 **Example:**
+
 ```javascript
 const updateResult = processor.processUpdate(result);
 console.log(updateResult.affectedRows);
@@ -286,11 +297,13 @@ console.log(updateResult.affectedRows);
 Processes DELETE query results.
 
 **Parameters:**
+
 - `result` (object) - Raw result from database
 
 **Returns:** (object) Result object with affectedRows
 
 **Example:**
+
 ```javascript
 const deleteResult = processor.processDelete(result);
 console.log(deleteResult.affectedRows);
@@ -301,15 +314,17 @@ console.log(deleteResult.affectedRows);
 Processes a single value based on its database type.
 
 **Parameters:**
+
 - `value` (any) - Value to process
 - `type` (string) - Database type string
 
 **Returns:** (any) Converted value
 
 **Example:**
+
 ```javascript
-const boolValue = processor.processValue(1, 'TINYINT(1)');
-const date = processor.processValue('2026-05-15 10:30:00', 'DATETIME');
+const boolValue = processor.processValue(1, "TINYINT(1)");
+const date = processor.processValue("2026-05-15 10:30:00", "DATETIME");
 ```
 
 #### `processColumns(fields)`
@@ -317,11 +332,13 @@ const date = processor.processValue('2026-05-15 10:30:00', 'DATETIME');
 Processes column metadata from query results.
 
 **Parameters:**
+
 - `fields` (array) - Column metadata from driver
 
 **Returns:** (array) Standardized column metadata
 
 **Example:**
+
 ```javascript
 const columns = processor.processColumns(connection.fields);
 ```
@@ -333,6 +350,7 @@ const columns = processor.processColumns(connection.fields);
 Processes an INSERT query and returns the generated ID.
 
 **Parameters:**
+
 - `query` (string) - SQL INSERT query
 - `values` (array) - Query parameters
 - `sequence` (string, optional) - Sequence name for PostgreSQL
@@ -340,6 +358,7 @@ Processes an INSERT query and returns the generated ID.
 **Returns:** (number|string) Generated ID
 
 **Example:**
+
 ```javascript
 const id = await processor.processInsertGetId(insertQuery, [values], null);
 ```
@@ -349,13 +368,15 @@ const id = await processor.processInsertGetId(insertQuery, [values], null);
 Returns a converter function for a specific database type.
 
 **Parameters:**
+
 - `type` (string) - Database type string
 
 **Returns:** (function) Converter function
 
 **Example:**
+
 ```javascript
-const converter = processor.getTypeConverter('TINYINT(1)');
+const converter = processor.getTypeConverter("TINYINT(1)");
 const bool = converter(1); // true
 ```
 
@@ -364,15 +385,17 @@ const bool = converter(1); // true
 Formats results in different output formats.
 
 **Parameters:**
+
 - `results` (array) - Result rows
 - `format` (string) - Format type: 'json', 'csv', 'table'
 
 **Returns:** (string) Formatted output
 
 **Example:**
+
 ```javascript
-const json = processor.formatResults(results, 'json');
-const csv = processor.formatResults(results, 'csv');
+const json = processor.formatResults(results, "json");
+const csv = processor.formatResults(results, "csv");
 ```
 
 #### `toCsv(results, headers)`
@@ -380,14 +403,16 @@ const csv = processor.formatResults(results, 'csv');
 Converts results to CSV format.
 
 **Parameters:**
+
 - `results` (array) - Result rows
 - `headers` (array, optional) - Column headers
 
 **Returns:** (string) CSV formatted string
 
 **Example:**
+
 ```javascript
-const csv = processor.toCsv(results, ['id', 'name', 'email']);
+const csv = processor.toCsv(results, ["id", "name", "email"]);
 ```
 
 #### `toTable(results)`
@@ -395,11 +420,13 @@ const csv = processor.toCsv(results, ['id', 'name', 'email']);
 Converts results to a formatted table string.
 
 **Parameters:**
+
 - `results` (array) - Result rows
 
 **Returns:** (string) Table formatted string
 
 **Example:**
+
 ```javascript
 const table = processor.toTable(results);
 console.log(table);
@@ -460,7 +487,9 @@ console.log(ids); // [42, 43, 44]
 
 ```javascript
 // Get full result with column information
-const result = await connection.select('SELECT * FROM users WHERE active = ?', [true]);
+const result = await connection.select("SELECT * FROM users WHERE active = ?", [
+  true,
+]);
 const columns = processor.processColumns(connection.fields);
 
 // Processed results with type information
@@ -469,8 +498,8 @@ const processed = processor.processSelect(result, columns);
 // Generate report
 const report = {
   totalRows: processed.length,
-  columns: columns.map(c => ({ name: c.name, type: c.type })),
-  data: processed
+  columns: columns.map((c) => ({ name: c.name, type: c.type })),
+  data: processed,
 };
 
 console.log(JSON.stringify(report, null, 2));
@@ -481,7 +510,7 @@ console.log(JSON.stringify(report, null, 2));
 ### JSON Format
 
 ```javascript
-const json = processor.formatResults(results, 'json');
+const json = processor.formatResults(results, "json");
 // [
 //   { "id": 1, "name": "John", "email": "john@example.com" },
 //   { "id": 2, "name": "Jane", "email": "jane@example.com" }
@@ -522,18 +551,22 @@ const table = processor.toTable(results);
 ### Common Issues
 
 **Type Not Converting**
+
 - Problem: Database values not being converted to expected types
 - Solution: Ensure column metadata is available and types are correctly identified
 
 **NULL Values Becoming False/0**
+
 - Problem: NULL values being converted instead of preserved
 - Solution: Processor should preserve NULL; check type converter implementation
 
 **JSON Parse Errors**
+
 - Problem: JSON columns failing to parse
 - Solution: Ensure JSON is valid before insertion; check column type definition
 
 **Performance Issues**
+
 - Problem: Processing large result sets is slow
 - Solution: Process only needed columns; consider streaming for very large results
 

@@ -18,15 +18,16 @@ The Grammar system provides a unified interface for generating SQL statements ac
 ### Simple SELECT Query
 
 ```javascript
-import MySQLGrammar from './lib/queries/grammar/MySQLGrammar.js';
-import Builder from './lib/queries/Builder.js';
+import MySQLGrammar from "./lib/queries/grammar/MySQLGrammar.js";
+import Builder from "./lib/queries/Builder.js";
 
 const grammar = new MySQLGrammar();
 const builder = new Builder();
 
-builder.select(['id', 'name', 'email'])
-  .from('users')
-  .where('status', '=', 'active');
+builder
+  .select(["id", "name", "email"])
+  .from("users")
+  .where("status", "=", "active");
 
 const sql = grammar.compileSelect(builder);
 console.log(sql);
@@ -37,12 +38,12 @@ console.log(sql);
 
 ```javascript
 const builder = new Builder();
-builder.from('users');
+builder.from("users");
 
 const data = {
-  name: 'John Doe',
-  email: 'john@example.com',
-  created_at: new Date()
+  name: "John Doe",
+  email: "john@example.com",
+  created_at: new Date(),
 };
 
 const sql = grammar.compileInsert(builder, data);
@@ -54,12 +55,11 @@ console.log(sql);
 
 ```javascript
 const builder = new Builder();
-builder.from('users')
-  .where('id', '=', 1);
+builder.from("users").where("id", "=", 1);
 
 const data = {
-  name: 'Jane Doe',
-  updated_at: new Date()
+  name: "Jane Doe",
+  updated_at: new Date(),
 };
 
 const sql = grammar.compileUpdate(builder, data);
@@ -71,8 +71,7 @@ console.log(sql);
 
 ```javascript
 const builder = new Builder();
-builder.from('users')
-  .where('status', '=', 'inactive');
+builder.from("users").where("status", "=", "inactive");
 
 const sql = grammar.compileDelete(builder);
 console.log(sql);
@@ -100,12 +99,12 @@ MySQL's `ON DUPLICATE KEY UPDATE` clause allows insert-or-update operations:
 ```javascript
 const data = {
   id: 1,
-  email: 'john@example.com',
-  visits: 5
+  email: "john@example.com",
+  visits: 5,
 };
 
 const updates = {
-  visits: 'visits + 1'
+  visits: "visits + 1",
 };
 
 const sql = grammar.compileInsert(builder, data, updates);
@@ -118,10 +117,7 @@ const sql = grammar.compileInsert(builder, data, updates);
 MySQL supports explicit locking for concurrent transactions:
 
 ```javascript
-builder.select(['*'])
-  .from('users')
-  .where('id', '=', 1)
-  .lockForUpdate();  // Adds FOR UPDATE clause
+builder.select(["*"]).from("users").where("id", "=", 1).lockForUpdate(); // Adds FOR UPDATE clause
 
 const sql = grammar.compileSelect(builder);
 // SELECT * FROM `users` WHERE `id` = ? FOR UPDATE
@@ -132,10 +128,7 @@ const sql = grammar.compileSelect(builder);
 MySQL uses `LIMIT` and `OFFSET` keywords for result pagination:
 
 ```javascript
-builder.select(['*'])
-  .from('users')
-  .limit(10)
-  .offset(20);
+builder.select(["*"]).from("users").limit(10).offset(20);
 
 const sql = grammar.compileSelect(builder);
 // SELECT * FROM `users` LIMIT 10 OFFSET 20
@@ -159,8 +152,8 @@ PostgreSQL's `RETURNING` clause returns the inserted or modified rows:
 
 ```javascript
 const data = {
-  name: 'Jane Doe',
-  email: 'jane@example.com'
+  name: "Jane Doe",
+  email: "jane@example.com",
 };
 
 const sql = grammar.compileInsert(builder, data);
@@ -172,10 +165,7 @@ const sql = grammar.compileInsert(builder, data);
 PostgreSQL uses the same `LIMIT` and `OFFSET` syntax as MySQL but with consistent semantics:
 
 ```javascript
-builder.select(['*'])
-  .from('users')
-  .limit(10)
-  .offset(20);
+builder.select(["*"]).from("users").limit(10).offset(20);
 
 // SELECT * FROM "users" LIMIT 10 OFFSET 20
 ```
@@ -206,8 +196,7 @@ All identifiers are wrapped in square brackets:
 SQLite uses `-1` to represent an infinite limit (no limit):
 
 ```javascript
-builder.select(['*'])
-  .from('users');
+builder.select(["*"]).from("users");
 
 // If no explicit limit is set, uses: LIMIT -1
 ```
@@ -229,11 +218,13 @@ SQLite uses a simplified type system with dynamic typing:
 Compiles a SELECT query into SQL.
 
 **Parameters:**
+
 - `query` (Builder) - Query builder instance
 
 **Returns:** (string) Compiled SQL statement
 
 **Example:**
+
 ```javascript
 const sql = grammar.compileSelect(builder);
 ```
@@ -243,6 +234,7 @@ const sql = grammar.compileSelect(builder);
 Compiles an INSERT query into SQL.
 
 **Parameters:**
+
 - `query` (Builder) - Query builder instance
 - `data` (object) - Data to insert
 - `onDuplicate` (object, optional) - MySQL: update clause for duplicate keys
@@ -250,8 +242,9 @@ Compiles an INSERT query into SQL.
 **Returns:** (string) Compiled SQL statement
 
 **Example:**
+
 ```javascript
-const sql = grammar.compileInsert(builder, { name: 'John' });
+const sql = grammar.compileInsert(builder, { name: "John" });
 ```
 
 #### `compileUpdate(query, data)`
@@ -259,14 +252,16 @@ const sql = grammar.compileInsert(builder, { name: 'John' });
 Compiles an UPDATE query into SQL.
 
 **Parameters:**
+
 - `query` (Builder) - Query builder instance
 - `data` (object) - Data to update
 
 **Returns:** (string) Compiled SQL statement
 
 **Example:**
+
 ```javascript
-const sql = grammar.compileUpdate(builder, { name: 'Jane' });
+const sql = grammar.compileUpdate(builder, { name: "Jane" });
 ```
 
 #### `compileDelete(query)`
@@ -274,11 +269,13 @@ const sql = grammar.compileUpdate(builder, { name: 'Jane' });
 Compiles a DELETE query into SQL.
 
 **Parameters:**
+
 - `query` (Builder) - Query builder instance
 
 **Returns:** (string) Compiled SQL statement
 
 **Example:**
+
 ```javascript
 const sql = grammar.compileDelete(builder);
 ```
@@ -288,14 +285,16 @@ const sql = grammar.compileDelete(builder);
 Processes an array with a transformation callback for each element.
 
 **Parameters:**
+
 - `array` (array) - Array to process
 - `callback` (function) - Transformation function
 
 **Returns:** (string) Joined result
 
 **Example:**
+
 ```javascript
-const parts = grammar.arrayNested(['id', 'name'], col => `\`${col}\``);
+const parts = grammar.arrayNested(["id", "name"], (col) => `\`${col}\``);
 // Returns: `id`, `name`
 ```
 
@@ -304,13 +303,15 @@ const parts = grammar.arrayNested(['id', 'name'], col => `\`${col}\``);
 Formats an identifier with database-specific quotation marks.
 
 **Parameters:**
+
 - `value` (string) - Identifier to wrap
 
 **Returns:** (string) Wrapped identifier
 
 **Example:**
+
 ```javascript
-const quoted = grammar.contactBacktick('users');
+const quoted = grammar.contactBacktick("users");
 // MySQL: `users`
 // PostgreSQL: "users"
 // SQLite: [users]
@@ -323,13 +324,15 @@ const quoted = grammar.contactBacktick('users');
 Wraps an identifier or value with database-specific formatting.
 
 **Parameters:**
+
 - `value` (string) - Value to wrap
 
 **Returns:** (string) Wrapped value
 
 **Example:**
+
 ```javascript
-const wrapped = grammar.wrapValue('user_id');
+const wrapped = grammar.wrapValue("user_id");
 ```
 
 #### `getColumnFormat(column)`
@@ -337,13 +340,15 @@ const wrapped = grammar.wrapValue('user_id');
 Returns a formatted column reference with proper quoting.
 
 **Parameters:**
+
 - `column` (string) - Column name
 
 **Returns:** (string) Formatted column
 
 **Example:**
+
 ```javascript
-const formatted = grammar.getColumnFormat('users.id');
+const formatted = grammar.getColumnFormat("users.id");
 // MySQL: `users`.`id`
 ```
 
@@ -352,11 +357,13 @@ const formatted = grammar.getColumnFormat('users.id');
 Generates a database-specific LIMIT clause.
 
 **Parameters:**
+
 - `query` (Builder) - Query builder instance
 
 **Returns:** (string) LIMIT clause or empty string
 
 **Example:**
+
 ```javascript
 const limit = grammar.compileLimit(builder);
 // MySQL/PostgreSQL: LIMIT 10 OFFSET 20
@@ -370,6 +377,7 @@ Generates a lock clause for row-level locking (MySQL only).
 **Returns:** (string) Lock clause
 
 **Example:**
+
 ```javascript
 const lock = grammar.lockForUpdate();
 // FOR UPDATE
@@ -381,11 +389,12 @@ const lock = grammar.lockForUpdate();
 
 ```javascript
 const builder = new Builder();
-builder.select(['users.id', 'users.name', 'orders.total'])
-  .from('users')
-  .join('orders', 'users.id', '=', 'orders.user_id')
-  .where('orders.total', '>', 100)
-  .orderBy('orders.created_at', 'desc')
+builder
+  .select(["users.id", "users.name", "orders.total"])
+  .from("users")
+  .join("orders", "users.id", "=", "orders.user_id")
+  .where("orders.total", ">", 100)
+  .orderBy("orders.created_at", "desc")
   .limit(20);
 
 const sql = grammar.compileSelect(builder);
@@ -395,11 +404,12 @@ const sql = grammar.compileSelect(builder);
 
 ```javascript
 const builder = new Builder();
-builder.select(['users.name', 'COUNT(*) as order_count'])
-  .from('users')
-  .leftJoin('orders', 'users.id', '=', 'orders.user_id')
-  .groupBy('users.id', 'users.name')
-  .having('order_count', '>', 5);
+builder
+  .select(["users.name", "COUNT(*) as order_count"])
+  .from("users")
+  .leftJoin("orders", "users.id", "=", "orders.user_id")
+  .groupBy("users.id", "users.name")
+  .having("order_count", ">", 5);
 
 const sql = grammar.compileSelect(builder);
 ```
@@ -408,14 +418,12 @@ const sql = grammar.compileSelect(builder);
 
 ```javascript
 const subquery = new Builder()
-  .select(['user_id', 'MAX(total) as max_total'])
-  .from('orders')
-  .groupBy('user_id');
+  .select(["user_id", "MAX(total) as max_total"])
+  .from("orders")
+  .groupBy("user_id");
 
 const builder = new Builder();
-builder.select(['*'])
-  .from('users')
-  .whereIn('id', subquery);
+builder.select(["*"]).from("users").whereIn("id", subquery);
 
 const sql = grammar.compileSelect(builder);
 ```
@@ -433,14 +441,17 @@ const sql = grammar.compileSelect(builder);
 ### Common Issues
 
 **Identifier Not Quoted**
+
 - Problem: Column names conflict with SQL keywords
 - Solution: Grammar automatically quotes identifiers; ensure you're using the grammar system
 
 **Type Conversion Issues**
+
 - Problem: Data types not matching database expectations
 - Solution: Use Processors (see Processors.md) to handle type conversion
 
 **SQL Syntax Errors**
+
 - Problem: Invalid SQL being generated
 - Solution: Check your Builder configuration; ensure where/join conditions are properly constructed
 

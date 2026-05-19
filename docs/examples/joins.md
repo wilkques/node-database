@@ -44,10 +44,11 @@ INNER JOIN returns rows that have matching values in both tables.
 
 ```javascript
 // Get users and their orders
-const userOrders = await db.table('users')
-    .select('users.name', 'orders.total', 'orders.status')
-    .join('orders', 'users.id', '=', 'orders.user_id')
-    .get();
+const userOrders = await db
+  .table("users")
+  .select("users.name", "orders.total", "orders.status")
+  .join("orders", "users.id", "=", "orders.user_id")
+  .get();
 
 // Result: Only users who have orders
 ```
@@ -56,22 +57,24 @@ const userOrders = await db.table('users')
 
 ```javascript
 // Using table aliases for cleaner queries
-const result = await db.table('users as u')
-    .select('u.name', 'o.total', 'o.status')
-    .join('orders as o', 'u.id', '=', 'o.user_id')
-    .get();
+const result = await db
+  .table("users as u")
+  .select("u.name", "o.total", "o.status")
+  .join("orders as o", "u.id", "=", "o.user_id")
+  .get();
 ```
 
 ### INNER JOIN with Conditions
 
 ```javascript
 // JOIN with additional WHERE conditions
-const completedOrders = await db.table('users')
-    .select('users.name', 'orders.total')
-    .join('orders', 'users.id', '=', 'orders.user_id')
-    .where('orders.status', 'completed')
-    .where('orders.total', '>', 50)
-    .get();
+const completedOrders = await db
+  .table("users")
+  .select("users.name", "orders.total")
+  .join("orders", "users.id", "=", "orders.user_id")
+  .where("orders.status", "completed")
+  .where("orders.total", ">", 50)
+  .get();
 ```
 
 ## LEFT JOIN
@@ -82,10 +85,11 @@ LEFT JOIN returns all rows from the left table, and matched rows from the right 
 
 ```javascript
 // Get all users and their orders (if any)
-const usersWithOrders = await db.table('users')
-    .select('users.name', 'users.email', 'orders.total')
-    .leftJoin('orders', 'users.id', '=', 'orders.user_id')
-    .get();
+const usersWithOrders = await db
+  .table("users")
+  .select("users.name", "users.email", "orders.total")
+  .leftJoin("orders", "users.id", "=", "orders.user_id")
+  .get();
 
 // Result: All users, with NULL for users without orders
 ```
@@ -94,24 +98,26 @@ const usersWithOrders = await db.table('users')
 
 ```javascript
 // Get users with their total order count
-const usersOrderCount = await db.table('users')
-    .select('users.id', 'users.name')
-    .select(db.raw('COUNT(orders.id) as order_count'))
-    .select(db.raw('COALESCE(SUM(orders.total), 0) as total_spent'))
-    .leftJoin('orders', 'users.id', '=', 'orders.user_id')
-    .groupBy('users.id', 'users.name')
-    .get();
+const usersOrderCount = await db
+  .table("users")
+  .select("users.id", "users.name")
+  .select(db.raw("COUNT(orders.id) as order_count"))
+  .select(db.raw("COALESCE(SUM(orders.total), 0) as total_spent"))
+  .leftJoin("orders", "users.id", "=", "orders.user_id")
+  .groupBy("users.id", "users.name")
+  .get();
 ```
 
 ### Find Users Without Orders
 
 ```javascript
 // Users who have never placed an order
-const usersWithoutOrders = await db.table('users')
-    .select('users.id', 'users.name', 'users.email')
-    .leftJoin('orders', 'users.id', '=', 'orders.user_id')
-    .whereNull('orders.user_id')
-    .get();
+const usersWithoutOrders = await db
+  .table("users")
+  .select("users.id", "users.name", "users.email")
+  .leftJoin("orders", "users.id", "=", "orders.user_id")
+  .whereNull("orders.user_id")
+  .get();
 ```
 
 ## RIGHT JOIN
@@ -122,10 +128,11 @@ RIGHT JOIN returns all rows from the right table, and matched rows from the left
 
 ```javascript
 // Get all orders and their users (if user exists)
-const ordersWithUsers = await db.table('users')
-    .select('orders.id as order_id', 'orders.total', 'users.name')
-    .rightJoin('orders', 'users.id', '=', 'orders.user_id')
-    .get();
+const ordersWithUsers = await db
+  .table("users")
+  .select("orders.id as order_id", "orders.total", "users.name")
+  .rightJoin("orders", "users.id", "=", "orders.user_id")
+  .get();
 
 // Result: All orders, with NULL for orders without valid users
 ```
@@ -138,10 +145,11 @@ CROSS JOIN returns the Cartesian product of both tables.
 
 ```javascript
 // Generate all combinations (use with caution on large tables)
-const combinations = await db.table('colors')
-    .select('colors.name as color', 'sizes.name as size')
-    .crossJoin('sizes')
-    .get();
+const combinations = await db
+  .table("colors")
+  .select("colors.name as color", "sizes.name as size")
+  .crossJoin("sizes")
+  .get();
 ```
 
 ## Self JOIN
@@ -152,21 +160,23 @@ Self JOIN is used to join a table with itself.
 
 ```javascript
 // Employees and their managers
-const employeesWithManagers = await db.table('employees as emp')
-    .select('emp.name as employee', 'mgr.name as manager')
-    .leftJoin('employees as mgr', 'emp.manager_id', '=', 'mgr.id')
-    .get();
+const employeesWithManagers = await db
+  .table("employees as emp")
+  .select("emp.name as employee", "mgr.name as manager")
+  .leftJoin("employees as mgr", "emp.manager_id", "=", "mgr.id")
+  .get();
 ```
 
 ### Find Related Records
 
 ```javascript
 // Find users in the same city
-const usersInSameCity = await db.table('users as u1')
-    .select('u1.name as user1', 'u2.name as user2', 'u1.city')
-    .join('users as u2', 'u1.city', '=', 'u2.city')
-    .where('u1.id', '<', db.raw('u2.id')) // Avoid duplicates
-    .get();
+const usersInSameCity = await db
+  .table("users as u1")
+  .select("u1.name as user1", "u2.name as user2", "u1.city")
+  .join("users as u2", "u1.city", "=", "u2.city")
+  .where("u1.id", "<", db.raw("u2.id")) // Avoid duplicates
+  .get();
 ```
 
 ## Multiple JOINs
@@ -177,59 +187,55 @@ Combining multiple tables in a single query.
 
 ```javascript
 // Users, orders, and order items
-const orderDetails = await db.table('users')
-    .select(
-        'users.name as customer',
-        'orders.id as order_id',
-        'orders.total',
-        'order_items.product_name',
-        'order_items.quantity'
-    )
-    .join('orders', 'users.id', '=', 'orders.user_id')
-    .join('order_items', 'orders.id', '=', 'order_items.order_id')
-    .get();
+const orderDetails = await db
+  .table("users")
+  .select(
+    "users.name as customer",
+    "orders.id as order_id",
+    "orders.total",
+    "order_items.product_name",
+    "order_items.quantity",
+  )
+  .join("orders", "users.id", "=", "orders.user_id")
+  .join("order_items", "orders.id", "=", "order_items.order_id")
+  .get();
 ```
 
 ### Mixed JOIN Types
 
 ```javascript
 // Users with profiles and orders (all users, optional orders)
-const userCompleteData = await db.table('users as u')
-    .select(
-        'u.name',
-        'u.email',
-        'p.bio',
-        'p.location',
-        'o.total',
-        'o.status'
-    )
-    .leftJoin('profiles as p', 'u.id', '=', 'p.user_id')
-    .leftJoin('orders as o', 'u.id', '=', 'o.user_id')
-    .get();
+const userCompleteData = await db
+  .table("users as u")
+  .select("u.name", "u.email", "p.bio", "p.location", "o.total", "o.status")
+  .leftJoin("profiles as p", "u.id", "=", "p.user_id")
+  .leftJoin("orders as o", "u.id", "=", "o.user_id")
+  .get();
 ```
 
 ### Complex Business Logic
 
 ```javascript
 // Complete order information with customer and product details
-const fullOrderView = await db.table('orders as o')
-    .select(
-        'o.id as order_id',
-        'o.order_date',
-        'o.status',
-        'u.name as customer_name',
-        'u.email as customer_email',
-        'oi.quantity',
-        'oi.price',
-        'p.name as product_name',
-        'p.category'
-    )
-    .join('users as u', 'o.user_id', '=', 'u.id')
-    .join('order_items as oi', 'o.id', '=', 'oi.order_id')
-    .join('products as p', 'oi.product_id', '=', 'p.id')
-    .where('o.status', 'completed')
-    .orderBy('o.order_date', 'desc')
-    .get();
+const fullOrderView = await db
+  .table("orders as o")
+  .select(
+    "o.id as order_id",
+    "o.order_date",
+    "o.status",
+    "u.name as customer_name",
+    "u.email as customer_email",
+    "oi.quantity",
+    "oi.price",
+    "p.name as product_name",
+    "p.category",
+  )
+  .join("users as u", "o.user_id", "=", "u.id")
+  .join("order_items as oi", "o.id", "=", "oi.order_id")
+  .join("products as p", "oi.product_id", "=", "p.id")
+  .where("o.status", "completed")
+  .orderBy("o.order_date", "desc")
+  .get();
 ```
 
 ## Conditional JOINs
@@ -240,44 +246,50 @@ JOINs with complex conditions.
 
 ```javascript
 // JOIN with multiple conditions
-const specialOrders = await db.table('users')
-    .select('users.name', 'orders.total')
-    .join('orders', function(join) {
-        join.on('users.id', '=', 'orders.user_id')
-            .andOn('orders.total', '>', db.raw('?', [100]))
-            .andOn('orders.status', '=', db.raw('?', ['completed']));
-    })
-    .get();
+const specialOrders = await db
+  .table("users")
+  .select("users.name", "orders.total")
+  .join("orders", function (join) {
+    join
+      .on("users.id", "=", "orders.user_id")
+      .andOn("orders.total", ">", db.raw("?", [100]))
+      .andOn("orders.status", "=", db.raw("?", ["completed"]));
+  })
+  .get();
 ```
 
 ### Conditional JOIN with OR
 
 ```javascript
 // JOIN with OR conditions
-const flexibleJoin = await db.table('users')
-    .select('users.name', 'contact.value')
-    .leftJoin('contacts', function(join) {
-        join.on('users.id', '=', 'contacts.user_id')
-            .andWhere(function(query) {
-                query.where('contacts.type', 'email')
-                     .orWhere('contacts.type', 'phone');
-            });
-    })
-    .get();
+const flexibleJoin = await db
+  .table("users")
+  .select("users.name", "contact.value")
+  .leftJoin("contacts", function (join) {
+    join.on("users.id", "=", "contacts.user_id").andWhere(function (query) {
+      query.where("contacts.type", "email").orWhere("contacts.type", "phone");
+    });
+  })
+  .get();
 ```
 
 ### Date-based JOINs
 
 ```javascript
 // JOIN orders from last 30 days
-const recentOrderUsers = await db.table('users')
-    .select('users.name', 'orders.total', 'orders.created_at')
-    .join('orders', function(join) {
-        join.on('users.id', '=', 'orders.user_id')
-            .andOn('orders.created_at', '>=', 
-                   db.raw('DATE_SUB(NOW(), INTERVAL 30 DAY)'));
-    })
-    .get();
+const recentOrderUsers = await db
+  .table("users")
+  .select("users.name", "orders.total", "orders.created_at")
+  .join("orders", function (join) {
+    join
+      .on("users.id", "=", "orders.user_id")
+      .andOn(
+        "orders.created_at",
+        ">=",
+        db.raw("DATE_SUB(NOW(), INTERVAL 30 DAY)"),
+      );
+  })
+  .get();
 ```
 
 ## Subquery JOINs
@@ -288,18 +300,22 @@ Using subqueries in JOIN operations.
 
 ```javascript
 // JOIN with aggregated subquery
-const usersWithOrderStats = await db.table('users')
-    .select('users.name', 'order_stats.total_orders', 'order_stats.total_spent')
-    .leftJoin(
-        db.table('orders')
-            .select('user_id')
-            .count('* as total_orders')
-            .sum('total as total_spent')
-            .groupBy('user_id')
-            .as('order_stats'),
-        'users.id', '=', 'order_stats.user_id'
-    )
-    .get();
+const usersWithOrderStats = await db
+  .table("users")
+  .select("users.name", "order_stats.total_orders", "order_stats.total_spent")
+  .leftJoin(
+    db
+      .table("orders")
+      .select("user_id")
+      .count("* as total_orders")
+      .sum("total as total_spent")
+      .groupBy("user_id")
+      .as("order_stats"),
+    "users.id",
+    "=",
+    "order_stats.user_id",
+  )
+  .get();
 ```
 
 ## Performance Considerations
@@ -309,23 +325,25 @@ const usersWithOrderStats = await db.table('users')
 ```javascript
 // Ensure JOIN columns are indexed
 // Index on orders.user_id and users.id for better performance
-const optimizedJoin = await db.table('users')
-    .select('users.name', 'orders.total')
-    .join('orders', 'users.id', '=', 'orders.user_id')
-    .where('users.status', 'active') // Also index users.status
-    .get();
+const optimizedJoin = await db
+  .table("users")
+  .select("users.name", "orders.total")
+  .join("orders", "users.id", "=", "orders.user_id")
+  .where("users.status", "active") // Also index users.status
+  .get();
 ```
 
 ### Limiting JOIN Results
 
 ```javascript
 // Use LIMIT with JOINs carefully
-const topUserOrders = await db.table('users')
-    .select('users.name', 'orders.total')
-    .join('orders', 'users.id', '=', 'orders.user_id')
-    .orderBy('orders.total', 'desc')
-    .limit(10)
-    .get();
+const topUserOrders = await db
+  .table("users")
+  .select("users.name", "orders.total")
+  .join("orders", "users.id", "=", "orders.user_id")
+  .orderBy("orders.total", "desc")
+  .limit(10)
+  .get();
 ```
 
 ## Common JOIN Patterns
@@ -334,35 +352,38 @@ const topUserOrders = await db.table('users')
 
 ```javascript
 // User has many orders
-const userOrderHistory = await db.table('users')
-    .select('users.name', 'orders.id as order_id', 'orders.total')
-    .leftJoin('orders', 'users.id', '=', 'orders.user_id')
-    .orderBy('users.name')
-    .orderBy('orders.created_at', 'desc')
-    .get();
+const userOrderHistory = await db
+  .table("users")
+  .select("users.name", "orders.id as order_id", "orders.total")
+  .leftJoin("orders", "users.id", "=", "orders.user_id")
+  .orderBy("users.name")
+  .orderBy("orders.created_at", "desc")
+  .get();
 ```
 
 ### Many-to-Many Relationship
 
 ```javascript
 // Users and roles through pivot table
-const usersWithRoles = await db.table('users')
-    .select('users.name', 'roles.name as role_name')
-    .join('user_roles', 'users.id', '=', 'user_roles.user_id')
-    .join('roles', 'user_roles.role_id', '=', 'roles.id')
-    .get();
+const usersWithRoles = await db
+  .table("users")
+  .select("users.name", "roles.name as role_name")
+  .join("user_roles", "users.id", "=", "user_roles.user_id")
+  .join("roles", "user_roles.role_id", "=", "roles.id")
+  .get();
 ```
 
 ### Hierarchical Data
 
 ```javascript
 // Category tree
-const categoryHierarchy = await db.table('categories as c')
-    .select('c.name as category', 'parent.name as parent_category')
-    .leftJoin('categories as parent', 'c.parent_id', '=', 'parent.id')
-    .orderBy('parent.name')
-    .orderBy('c.name')
-    .get();
+const categoryHierarchy = await db
+  .table("categories as c")
+  .select("c.name as category", "parent.name as parent_category")
+  .leftJoin("categories as parent", "c.parent_id", "=", "parent.id")
+  .orderBy("parent.name")
+  .orderBy("c.name")
+  .get();
 ```
 
 ## Related Documentation

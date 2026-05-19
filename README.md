@@ -8,7 +8,7 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 **Modern Node.js Database Query Builder**  
-*Supports MySQL, PostgreSQL, and SQLite*
+_Supports MySQL, PostgreSQL, and SQLite_
 
 [Quick Start](#quick-start) • [API Documentation](#api-documentation) • [Examples](#examples) • [Features](#features)
 
@@ -25,12 +25,14 @@ A powerful, type-safe Node.js database query builder with fluent API and complet
 ## ✨ Features
 
 ### 🔧 Core Features
+
 - **🎯 Fluent API** - Chainable method calls, intuitive and easy to use
 - **🔄 Multi-Database Support** - Unified interface for MySQL, PostgreSQL, SQLite
 - **⚡ High Performance** - Optimized query generation and connection management
 - **🔒 SQL Injection Protection** - Automatic parameterized queries, safe and secure
 
 ### 📝 Query Features
+
 - **🔍 Complex Queries** - SELECT, WHERE, ORDER BY, GROUP BY, HAVING
 - **🔗 JOIN Operations** - INNER, LEFT, RIGHT, CROSS JOIN and subqueries
 - **📊 Aggregate Functions** - COUNT, SUM, AVG, MAX, MIN
@@ -38,6 +40,7 @@ A powerful, type-safe Node.js database query builder with fluent API and complet
 - **🔄 Transaction Handling** - Complete transaction support and rollback mechanism
 
 ### 🛠️ Advanced Features
+
 - **📁 Subqueries** - Nested queries in WHERE, FROM, JOIN
 - **🧮 Data Modification** - INSERT, UPDATE, DELETE, UPSERT
 - **🔢 Atomic Operations** - INCREMENT, DECREMENT atomic counters
@@ -72,38 +75,38 @@ npm install
 
 ```javascript
 // Default import (recommended)
-import Database from '@wilkques/database';
+import Database from "@wilkques/database";
 
 // Named imports (alternative)
-import { Database, Builder } from '@wilkques/database';
+import { Database, Builder } from "@wilkques/database";
 
 // CommonJS (if using require)
-const Database = require('@wilkques/database').default;
+const Database = require("@wilkques/database").default;
 
 // MySQL connection
 const db = await Database.connect({
-    driver: 'mysql',
-    host: 'localhost',
-    username: 'user', 
-    password: 'password',
-    database: 'mydb',
-    port: 3306
+  driver: "mysql",
+  host: "localhost",
+  username: "user",
+  password: "password",
+  database: "mydb",
+  port: 3306,
 });
 
 // PostgreSQL connection
 const db = await Database.connect({
-    driver: 'postgres',
-    host: 'localhost',
-    username: 'user',
-    password: 'password', 
-    database: 'mydb',
-    port: 5432
+  driver: "postgres",
+  host: "localhost",
+  username: "user",
+  password: "password",
+  database: "mydb",
+  port: 5432,
 });
 
 // SQLite connection
 const db = await Database.connect({
-    driver: 'sqlite',
-    database: './database.db'
+  driver: "sqlite",
+  database: "./database.db",
 });
 ```
 
@@ -111,63 +114,75 @@ const db = await Database.connect({
 
 ```javascript
 // Simple query
-const users = await db.table('users')
-    .select('id', 'name', 'email')
-    .where('active', true)
-    .orderBy('created_at', 'desc')
-    .limit(10)
-    .get();
+const users = await db
+  .table("users")
+  .select("id", "name", "email")
+  .where("active", true)
+  .orderBy("created_at", "desc")
+  .limit(10)
+  .get();
 
 // Conditional query
-const posts = await db.table('posts')
-    .select('title', 'content', 'author_id')
-    .where('status', 'published')
-    .where('created_at', '>', '2024-01-01')
-    .whereIn('category_id', [1, 2, 3])
-    .get();
+const posts = await db
+  .table("posts")
+  .select("title", "content", "author_id")
+  .where("status", "published")
+  .where("created_at", ">", "2024-01-01")
+  .whereIn("category_id", [1, 2, 3])
+  .get();
 
 // JOIN query
-const userPosts = await db.table('users', 'u')
-    .select('u.name', 'p.title', 'p.created_at')
-    .leftJoin('posts p', 'u.id', 'p.author_id')
-    .where('u.active', true)
-    .orderBy('p.created_at', 'desc')
-    .get();
+const userPosts = await db
+  .table("users", "u")
+  .select("u.name", "p.title", "p.created_at")
+  .leftJoin("posts p", "u.id", "p.author_id")
+  .where("u.active", true)
+  .orderBy("p.created_at", "desc")
+  .get();
 ```
 
 ### Conditional Expressions (CASE WHEN)
 
 ```javascript
 // Simple CASE statement
-const users = await db.table('users')
-    .select('name', 'email',
-        db.case('status')
-            .when('active', 'Active')
-            .when('inactive', 'Inactive')
-            .when('banned', 'Banned')
-            .else('Unknown')
-            .end('status_text')
-    )
-    .get();
+const users = await db
+  .table("users")
+  .select(
+    "name",
+    "email",
+    db
+      .case("status")
+      .when("active", "Active")
+      .when("inactive", "Inactive")
+      .when("banned", "Banned")
+      .else("Unknown")
+      .end("status_text"),
+  )
+  .get();
 
 // Complex conditional CASE
-const orders = await db.table('orders')
-    .select('id', 'total',
-        db.case()
-            .when(q => q.where('total', '>', 1000), 'Large Order')
-            .when(q => q.where('total', '>', 500), 'Medium Order') 
-            .else('Small Order')
-            .end('order_type')
-    )
-    .get();
+const orders = await db
+  .table("orders")
+  .select(
+    "id",
+    "total",
+    db
+      .case()
+      .when((q) => q.where("total", ">", 1000), "Large Order")
+      .when((q) => q.where("total", ">", 500), "Medium Order")
+      .else("Small Order")
+      .end("order_type"),
+  )
+  .get();
 
 // Using CASE in UPDATE
-await db.table('products').update({
-    status: db.case('inventory')
-        .when(0, 'Out of Stock')
-        .when(q => q.where('inventory', '<', 10), 'Low Stock')
-        .else('In Stock')
-        .end()
+await db.table("products").update({
+  status: db
+    .case("inventory")
+    .when(0, "Out of Stock")
+    .when((q) => q.where("inventory", "<", 10), "Low Stock")
+    .else("In Stock")
+    .end(),
 });
 ```
 
@@ -175,35 +190,31 @@ await db.table('products').update({
 
 ```javascript
 // Insert data
-const result = await db.table('users').insert({
-    name: 'John Doe',
-    email: 'john@example.com',
-    created_at: new Date()
+const result = await db.table("users").insert({
+  name: "John Doe",
+  email: "john@example.com",
+  created_at: new Date(),
 });
 
 // Batch insert
-await db.table('users').insert([
-    { name: 'User 1', email: 'user1@example.com' },
-    { name: 'User 2', email: 'user2@example.com' }
+await db.table("users").insert([
+  { name: "User 1", email: "user1@example.com" },
+  { name: "User 2", email: "user2@example.com" },
 ]);
 
 // Update data
-await db.table('users')
-    .where('id', 1)
-    .update({
-        name: 'Jane Doe',
-        updated_at: new Date()
-    });
+await db.table("users").where("id", 1).update({
+  name: "Jane Doe",
+  updated_at: new Date(),
+});
 
 // Atomic operations
-await db.table('posts')
-    .where('id', 1)
-    .increment('view_count', 1);
+await db.table("posts").where("id", 1).increment("view_count", 1);
 
 // Upsert operation
-await db.table('settings').upsert({
-    key: 'theme',
-    value: 'dark'
+await db.table("settings").upsert({
+  key: "theme",
+  value: "dark",
 });
 ```
 
@@ -213,45 +224,48 @@ await db.table('settings').upsert({
 const transaction = await db.transaction();
 
 try {
-    // Create order
-    const orderId = await transaction.table('orders').insertGetId({
-        user_id: userId,
-        total: orderTotal,
-        status: 'pending'
-    });
+  // Create order
+  const orderId = await transaction.table("orders").insertGetId({
+    user_id: userId,
+    total: orderTotal,
+    status: "pending",
+  });
 
-    // Add order items
-    await transaction.table('order_items').insert(
-        items.map(item => ({
-            order_id: orderId,
-            product_id: item.product_id,
-            quantity: item.quantity,
-            price: item.price
-        }))
-    );
+  // Add order items
+  await transaction.table("order_items").insert(
+    items.map((item) => ({
+      order_id: orderId,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      price: item.price,
+    })),
+  );
 
-    // Update inventory
-    for (const item of items) {
-        await transaction.table('products')
-            .where('id', item.product_id)
-            .decrement('stock', item.quantity);
-    }
+  // Update inventory
+  for (const item of items) {
+    await transaction
+      .table("products")
+      .where("id", item.product_id)
+      .decrement("stock", item.quantity);
+  }
 
-    await transaction.commit();
-    console.log('Order created successfully');
+  await transaction.commit();
+  console.log("Order created successfully");
 } catch (error) {
-    await transaction.rollback();
-    console.error('Order creation failed:', error);
+  await transaction.rollback();
+  console.error("Order creation failed:", error);
 }
 ```
 
 ## 📚 API Documentation
 
 ### Core Classes
+
 - **[Database Class](docs/api/Database.md)** - Database connection management and core functionality
 - **[Builder Class](docs/api/Builder.md)** - Complete query builder API reference
 
 ### Detailed Guides
+
 - **[Quick Start Guide](docs/examples/quick-start.md)** - Complete getting started tutorial
 - **[Basic Queries](docs/examples/basic-queries.md)** - SELECT queries explained
 - **[JOIN Operations](docs/examples/joins.md)** - Complete guide to table joins
@@ -259,16 +273,17 @@ try {
 - **[Transaction Handling](docs/examples/transactions.md)** - Transaction management and data consistency
 
 ### System Documentation
+
 - **[Grammar System](docs/Grammar.md)** - SQL compilation and database-specific syntax
 - **[Processors System](docs/Processors.md)** - Result processing and type conversion
 
 ## 💾 Supported Databases
 
-| Database | Version Support | Driver | Feature Support |
-|----------|-----------------|--------|-----------------|
-| **MySQL** | 5.7+ | mysql2 | ✅ Full Support |
-| **PostgreSQL** | 9.6+ | pg | ✅ Full Support |
-| **SQLite** | 3.x | better-sqlite3 | ✅ Full Support |
+| Database       | Version Support | Driver         | Feature Support |
+| -------------- | --------------- | -------------- | --------------- |
+| **MySQL**      | 5.7+            | mysql2         | ✅ Full Support |
+| **PostgreSQL** | 9.6+            | pg             | ✅ Full Support |
+| **SQLite**     | 3.x             | better-sqlite3 | ✅ Full Support |
 
 ## 🧪 Testing
 
@@ -279,6 +294,7 @@ npm test
 ```
 
 **Test Coverage:**
+
 - ✅ **149 tests all passed**
 - ✅ **9 test suites covered**
 - ✅ **All core functionality verified**
@@ -306,22 +322,27 @@ examples/                  # Example code
 
 ```javascript
 // Raw SQL queries
-const results = await db.raw(`
+const results = await db.raw(
+  `
     SELECT u.*, COUNT(p.id) as post_count 
     FROM users u 
     LEFT JOIN posts p ON u.id = p.author_id 
     GROUP BY u.id
     HAVING post_count > ?
-`, [5]);
+`,
+  [5],
+);
 
 // Subqueries
-const activeUsers = await db.table('users')
-    .whereExists(query => {
-        query.table('posts')
-            .whereRaw('posts.author_id = users.id')
-            .where('posts.status', 'published');
-    })
-    .get();
+const activeUsers = await db
+  .table("users")
+  .whereExists((query) => {
+    query
+      .table("posts")
+      .whereRaw("posts.author_id = users.id")
+      .where("posts.status", "published");
+  })
+  .get();
 ```
 
 ### Query Optimization
@@ -329,7 +350,7 @@ const activeUsers = await db.table('users')
 ```javascript
 // Query logging
 db.connection.enableQueryLog();
-const result = await db.table('users').get();
+const result = await db.table("users").get();
 console.log(db.connection.getQueryLog());
 ```
 

@@ -18,15 +18,16 @@ Grammar 系统为多个数据库系统（MySQL、PostgreSQL、SQLite）提供统
 ### 简单 SELECT 查询
 
 ```javascript
-import MySQLGrammar from './lib/queries/grammar/MySQLGrammar.js';
-import Builder from './lib/queries/Builder.js';
+import MySQLGrammar from "./lib/queries/grammar/MySQLGrammar.js";
+import Builder from "./lib/queries/Builder.js";
 
 const grammar = new MySQLGrammar();
 const builder = new Builder();
 
-builder.select(['id', 'name', 'email'])
-  .from('users')
-  .where('status', '=', 'active');
+builder
+  .select(["id", "name", "email"])
+  .from("users")
+  .where("status", "=", "active");
 
 const sql = grammar.compileSelect(builder);
 console.log(sql);
@@ -37,12 +38,12 @@ console.log(sql);
 
 ```javascript
 const builder = new Builder();
-builder.from('users');
+builder.from("users");
 
 const data = {
-  name: 'John Doe',
-  email: 'john@example.com',
-  created_at: new Date()
+  name: "John Doe",
+  email: "john@example.com",
+  created_at: new Date(),
 };
 
 const sql = grammar.compileInsert(builder, data);
@@ -54,12 +55,11 @@ console.log(sql);
 
 ```javascript
 const builder = new Builder();
-builder.from('users')
-  .where('id', '=', 1);
+builder.from("users").where("id", "=", 1);
 
 const data = {
-  name: 'Jane Doe',
-  updated_at: new Date()
+  name: "Jane Doe",
+  updated_at: new Date(),
 };
 
 const sql = grammar.compileUpdate(builder, data);
@@ -71,8 +71,7 @@ console.log(sql);
 
 ```javascript
 const builder = new Builder();
-builder.from('users')
-  .where('status', '=', 'inactive');
+builder.from("users").where("status", "=", "inactive");
 
 const sql = grammar.compileDelete(builder);
 console.log(sql);
@@ -100,12 +99,12 @@ MySQL 的 `ON DUPLICATE KEY UPDATE` 子句允许插入或更新操作：
 ```javascript
 const data = {
   id: 1,
-  email: 'john@example.com',
-  visits: 5
+  email: "john@example.com",
+  visits: 5,
 };
 
 const updates = {
-  visits: 'visits + 1'
+  visits: "visits + 1",
 };
 
 const sql = grammar.compileInsert(builder, data, updates);
@@ -118,10 +117,7 @@ const sql = grammar.compileInsert(builder, data, updates);
 MySQL 支持并发事务的显式锁定：
 
 ```javascript
-builder.select(['*'])
-  .from('users')
-  .where('id', '=', 1)
-  .lockForUpdate();  // 添加 FOR UPDATE 子句
+builder.select(["*"]).from("users").where("id", "=", 1).lockForUpdate(); // 添加 FOR UPDATE 子句
 
 const sql = grammar.compileSelect(builder);
 // SELECT * FROM `users` WHERE `id` = ? FOR UPDATE
@@ -132,10 +128,7 @@ const sql = grammar.compileSelect(builder);
 MySQL 使用 `LIMIT` 和 `OFFSET` 关键字进行结果分页：
 
 ```javascript
-builder.select(['*'])
-  .from('users')
-  .limit(10)
-  .offset(20);
+builder.select(["*"]).from("users").limit(10).offset(20);
 
 const sql = grammar.compileSelect(builder);
 // SELECT * FROM `users` LIMIT 10 OFFSET 20
@@ -159,7 +152,7 @@ const sql = grammar.compileSelect(builder);
 PostgreSQL 支持在 INSERT、UPDATE、DELETE 语句中使用 RETURNING：
 
 ```javascript
-const sql = grammar.compileInsert(builder, data, ['id', 'created_at']);
+const sql = grammar.compileInsert(builder, data, ["id", "created_at"]);
 // INSERT INTO "users" ("name", "email") VALUES (?, ?) RETURNING "id", "created_at"
 ```
 
@@ -168,7 +161,7 @@ const sql = grammar.compileInsert(builder, data, ['id', 'created_at']);
 PostgreSQL 支持数组数据类型：
 
 ```javascript
-builder.where('tags', '@>', ['javascript', 'node.js']);
+builder.where("tags", "@>", ["javascript", "node.js"]);
 // WHERE "tags" @> ARRAY[?, ?]
 ```
 
@@ -177,10 +170,10 @@ builder.where('tags', '@>', ['javascript', 'node.js']);
 PostgreSQL 提供丰富的 JSON 操作符：
 
 ```javascript
-builder.where('data->name', '=', 'John');
+builder.where("data->name", "=", "John");
 // WHERE "data"->'name' = ?
 
-builder.where('data->>email', 'LIKE', '%@gmail.com');
+builder.where("data->>email", "LIKE", "%@gmail.com");
 // WHERE "data"->>'email' LIKE ?
 ```
 
@@ -220,7 +213,7 @@ SQLite 使用 INTEGER PRIMARY KEY AUTOINCREMENT：
 SQLite 支持全文搜索：
 
 ```javascript
-builder.whereRaw('users MATCH ?', ['john']);
+builder.whereRaw("users MATCH ?", ["john"]);
 // WHERE users MATCH ?
 ```
 
@@ -232,15 +225,15 @@ builder.whereRaw('users MATCH ?', ['john']);
 
 ```javascript
 const components = [
-  'columns',    // SELECT 列
-  'from',       // FROM 表
-  'joins',      // JOIN 连接
-  'wheres',     // WHERE 条件
-  'groups',     // GROUP BY 分组
-  'havings',    // HAVING 条件
-  'orders',     // ORDER BY 排序
-  'limit',      // LIMIT 限制
-  'offset'      // OFFSET 偏移
+  "columns", // SELECT 列
+  "from", // FROM 表
+  "joins", // JOIN 连接
+  "wheres", // WHERE 条件
+  "groups", // GROUP BY 分组
+  "havings", // HAVING 条件
+  "orders", // ORDER BY 排序
+  "limit", // LIMIT 限制
+  "offset", // OFFSET 偏移
 ];
 
 const sql = grammar.compileSelect(builder);
@@ -251,7 +244,7 @@ const sql = grammar.compileSelect(builder);
 编译 INSERT 语句：
 
 ```javascript
-const data = { name: 'John', email: 'john@example.com' };
+const data = { name: "John", email: "john@example.com" };
 const sql = grammar.compileInsert(builder, data);
 ```
 
@@ -260,7 +253,7 @@ const sql = grammar.compileInsert(builder, data);
 编译 UPDATE 语句：
 
 ```javascript
-const data = { name: 'Jane' };
+const data = { name: "Jane" };
 const sql = grammar.compileUpdate(builder, data);
 ```
 
@@ -278,7 +271,7 @@ const sql = grammar.compileDelete(builder);
 
 ```javascript
 // WHERE name = ?
-builder.where('name', '=', 'John');
+builder.where("name", "=", "John");
 
 // 绑定参数: ['John']
 const bindings = builder.getBindings();
@@ -288,10 +281,10 @@ const bindings = builder.getBindings();
 
 ```javascript
 // WHERE id IN (?, ?, ?)
-builder.whereIn('id', [1, 2, 3]);
+builder.whereIn("id", [1, 2, 3]);
 
 // WHERE created_at BETWEEN ? AND ?
-builder.whereBetween('created_at', ['2024-01-01', '2024-12-31']);
+builder.whereBetween("created_at", ["2024-01-01", "2024-12-31"]);
 
 // 绑定参数: [1, 2, 3, '2024-01-01', '2024-12-31']
 const bindings = builder.getBindings();
@@ -301,8 +294,8 @@ const bindings = builder.getBindings();
 
 ```javascript
 // 原始 SQL 不会被转义
-builder.select(db.raw('COUNT(*) as total'));
-builder.whereRaw('created_at > DATE_SUB(NOW(), INTERVAL 1 DAY)');
+builder.select(db.raw("COUNT(*) as total"));
+builder.whereRaw("created_at > DATE_SUB(NOW(), INTERVAL 1 DAY)");
 
 const sql = grammar.compileSelect(builder);
 // SELECT COUNT(*) as total FROM users WHERE created_at > DATE_SUB(NOW(), INTERVAL 1 DAY)
@@ -313,51 +306,51 @@ const sql = grammar.compileSelect(builder);
 ### 扩展基础 Grammar
 
 ```javascript
-import Grammar from './Grammar.js';
+import Grammar from "./Grammar.js";
 
 class CustomGrammar extends Grammar {
-    /**
-     * 包装列名
-     */
-    wrapValue(value) {
-        if (value === '*') return value;
-        return `[${value}]`; // 使用方括号
+  /**
+   * 包装列名
+   */
+  wrapValue(value) {
+    if (value === "*") return value;
+    return `[${value}]`; // 使用方括号
+  }
+
+  /**
+   * 编译 LIMIT 子句
+   */
+  compileLimit(query, limit) {
+    return `TOP ${limit}`;
+  }
+
+  /**
+   * 自定义函数支持
+   */
+  compileCustomFunction(functionName, args) {
+    switch (functionName) {
+      case "ISNULL":
+        return `ISNULL(${args.join(", ")})`;
+      default:
+        return super.compileCustomFunction(functionName, args);
     }
-    
-    /**
-     * 编译 LIMIT 子句
-     */
-    compileLimit(query, limit) {
-        return `TOP ${limit}`;
-    }
-    
-    /**
-     * 自定义函数支持
-     */
-    compileCustomFunction(functionName, args) {
-        switch (functionName) {
-            case 'ISNULL':
-                return `ISNULL(${args.join(', ')})`;
-            default:
-                return super.compileCustomFunction(functionName, args);
-        }
-    }
+  }
 }
 ```
 
 ### 注册自定义 Grammar
 
 ```javascript
-import Database from './Database.js';
-import CustomGrammar from './CustomGrammar.js';
+import Database from "./Database.js";
+import CustomGrammar from "./CustomGrammar.js";
 
 // 注册自定义 Grammar
-Database.registerGrammar('custom', CustomGrammar);
+Database.registerGrammar("custom", CustomGrammar);
 
 // 使用自定义 Grammar
 const db = await Database.connect({
-    driver: 'custom',
-    // ... 其他配置
+  driver: "custom",
+  // ... 其他配置
 });
 ```
 
@@ -369,11 +362,11 @@ const db = await Database.connect({
 const grammar = new MySQLGrammar();
 
 // 根据条件编译不同的 SQL
-if (database === 'mysql') {
-    sql = grammar.compileSelect(builder);
-} else if (database === 'postgres') {
-    const pgGrammar = new PostgreSQLGrammar();
-    sql = pgGrammar.compileSelect(builder);
+if (database === "mysql") {
+  sql = grammar.compileSelect(builder);
+} else if (database === "postgres") {
+  const pgGrammar = new PostgreSQLGrammar();
+  sql = pgGrammar.compileSelect(builder);
 }
 ```
 
@@ -384,7 +377,7 @@ if (database === 'mysql') {
 grammar.enableQueryCache();
 
 // 使用索引提示（MySQL）
-builder.useIndex('idx_user_status');
+builder.useIndex("idx_user_status");
 const sql = grammar.compileSelect(builder);
 // SELECT * FROM `users` USE INDEX (`idx_user_status`)
 ```
@@ -398,9 +391,9 @@ grammar.enableDebug();
 const sql = grammar.compileSelect(builder);
 const bindings = builder.getBindings();
 
-console.log('SQL:', sql);
-console.log('Bindings:', bindings);
-console.log('Compiled SQL:', grammar.interpolate(sql, bindings));
+console.log("SQL:", sql);
+console.log("Bindings:", bindings);
+console.log("Compiled SQL:", grammar.interpolate(sql, bindings));
 ```
 
 ## 性能考虑
@@ -423,14 +416,14 @@ const sql2 = grammar.compileSelect(builder2);
 const queryCache = new Map();
 
 function getCachedSQL(builder) {
-    const key = builder.toSql();
-    
-    if (!queryCache.has(key)) {
-        const sql = grammar.compileSelect(builder);
-        queryCache.set(key, sql);
-    }
-    
-    return queryCache.get(key);
+  const key = builder.toSql();
+
+  if (!queryCache.has(key)) {
+    const sql = grammar.compileSelect(builder);
+    queryCache.set(key, sql);
+  }
+
+  return queryCache.get(key);
 }
 ```
 
@@ -439,34 +432,37 @@ function getCachedSQL(builder) {
 ### 常见问题
 
 **标识符冲突：**
+
 ```javascript
 // 错误：使用保留关键字作为列名
-builder.select('order'); // 'order' 是保留关键字
+builder.select("order"); // 'order' 是保留关键字
 
 // 正确：使用引用包装
-builder.select(grammar.wrapColumn('order'));
+builder.select(grammar.wrapColumn("order"));
 // MySQL: SELECT `order`
 // PostgreSQL: SELECT "order"
 ```
 
 **参数绑定错误：**
+
 ```javascript
 // 错误：手动字符串连接
 builder.whereRaw(`name = '${userInput}'`); // SQL 注入风险
 
 // 正确：使用参数绑定
-builder.whereRaw('name = ?', [userInput]); // 安全
+builder.whereRaw("name = ?", [userInput]); // 安全
 ```
 
 **语法不兼容：**
+
 ```javascript
 // 检查数据库类型
 if (grammar instanceof MySQLGrammar) {
-    // MySQL 特定语法
-    builder.whereRaw('MATCH(title) AGAINST(?)', [searchTerm]);
+  // MySQL 特定语法
+  builder.whereRaw("MATCH(title) AGAINST(?)", [searchTerm]);
 } else if (grammar instanceof PostgreSQLGrammar) {
-    // PostgreSQL 特定语法
-    builder.whereRaw('title @@ to_tsquery(?)', [searchTerm]);
+  // PostgreSQL 特定语法
+  builder.whereRaw("title @@ to_tsquery(?)", [searchTerm]);
 }
 ```
 
