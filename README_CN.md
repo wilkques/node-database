@@ -45,33 +45,40 @@
 
 ## 📦 安装
 
-### 1. 安装查询构建器
+### 1. 通过 npm 安装
+
 ```bash
-# 克隆或下载项目
-git clone <repository-url>
-cd Database
+# 安装数据库查询构建器
+npm install @wilkques/database-node
+
+# 安装你需要的数据库驱动
+npm install mysql2          # MySQL 数据库
+npm install pg              # PostgreSQL 数据库
+npm install better-sqlite3  # SQLite 数据库
 ```
 
-### 2. 安装数据库驱动
-根据你的数据库安装相应驱动：
+### 2. 从源码安装
 
 ```bash
-# MySQL
-npm install mysql2
-
-# PostgreSQL  
-npm install pg
-
-# SQLite
-npm install better-sqlite3
+# 克隆仓库
+git clone https://github.com/wilkques/database-node.git
+cd database-node
+npm install
 ```
 
 ## 🚀 快速开始
 
-### 基本连接
+### 导入和基本连接
 
 ```javascript
-import Database from './index.js';
+// 默认导入（推荐）
+import Database from '@wilkques/database-node';
+
+// 命名导入（可选）
+import { Database, Builder } from '@wilkques/database-node';
+
+// CommonJS（如果使用 require）
+const Database = require('@wilkques/database-node').default;
 
 // MySQL 连接
 const db = await Database.connect({

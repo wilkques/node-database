@@ -45,33 +45,40 @@ A powerful, type-safe Node.js database query builder with fluent API and complet
 
 ## 📦 Installation
 
-### 1. Install Query Builder
+### 1. Install via npm
+
 ```bash
-# Clone or download project
-git clone <repository-url>
-cd Database
+# Install the database query builder
+npm install @wilkques/database-node
+
+# Install the database driver you need
+npm install mysql2          # For MySQL
+npm install pg              # For PostgreSQL
+npm install better-sqlite3  # For SQLite
 ```
 
-### 2. Install Database Drivers
-Install the appropriate driver based on your database:
+### 2. Alternative: Install from Source
 
 ```bash
-# MySQL
-npm install mysql2
-
-# PostgreSQL  
-npm install pg
-
-# SQLite
-npm install better-sqlite3
+# Clone the repository
+git clone https://github.com/wilkques/database-node.git
+cd database-node
+npm install
 ```
 
 ## 🚀 Quick Start
 
-### Basic Connection
+### Import and Basic Connection
 
 ```javascript
-import Database from './index.js';
+// Default import (recommended)
+import Database from '@wilkques/database-node';
+
+// Named imports (alternative)
+import { Database, Builder } from '@wilkques/database-node';
+
+// CommonJS (if using require)
+const Database = require('@wilkques/database-node').default;
 
 // MySQL connection
 const db = await Database.connect({
