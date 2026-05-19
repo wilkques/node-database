@@ -49,7 +49,7 @@ A powerful, type-safe Node.js database query builder with fluent API and complet
 
 ```bash
 # Install the database query builder
-npm install @wilkques/database-node
+npm install @wilkques/database
 
 # Install the database driver you need
 npm install mysql2          # For MySQL
@@ -61,8 +61,8 @@ npm install better-sqlite3  # For SQLite
 
 ```bash
 # Clone the repository
-git clone https://github.com/wilkques/database-node.git
-cd database-node
+git clone https://github.com/wilkques/database.git
+cd database
 npm install
 ```
 
@@ -72,13 +72,13 @@ npm install
 
 ```javascript
 // Default import (recommended)
-import Database from '@wilkques/database-node';
+import Database from '@wilkques/database';
 
 // Named imports (alternative)
-import { Database, Builder } from '@wilkques/database-node';
+import { Database, Builder } from '@wilkques/database';
 
 // CommonJS (if using require)
-const Database = require('@wilkques/database-node').default;
+const Database = require('@wilkques/database').default;
 
 // MySQL connection
 const db = await Database.connect({

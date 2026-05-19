@@ -1,5 +1,5 @@
 {
-  "name": "@wilkques/database-node",
+  "name": "@wilkques/database",
   "version": "1.0.0",
   "description": "Modern Node.js database query builder inspired by wilkques/database PHP package",
   "main": "index.js",
@@ -36,9 +36,9 @@
   ],
   "author": "wilkques",
   "license": "MIT",
-  "homepage": "https://github.com/wilkques/database-node#readme",
+  "homepage": "https://github.com/wilkques/database#readme",
   "bugs": {
-    "url": "https://github.com/wilkques/database-node/issues"
+    "url": "https://github.com/wilkques/database/issues"
   },
   "files": [
     "lib/",
@@ -62,7 +62,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wilkques/database-node"
+    "url": "https://github.com/wilkques/database"
   },
   "peerDependencies": {
     "mysql2": "^3.0.0",

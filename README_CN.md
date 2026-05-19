@@ -49,7 +49,7 @@
 
 ```bash
 # 安装数据库查询构建器
-npm install @wilkques/database-node
+npm install @wilkques/database
 
 # 安装你需要的数据库驱动
 npm install mysql2          # MySQL 数据库
@@ -61,8 +61,8 @@ npm install better-sqlite3  # SQLite 数据库
 
 ```bash
 # 克隆仓库
-git clone https://github.com/wilkques/database-node.git
-cd database-node
+git clone https://github.com/wilkques/database.git
+cd database
 npm install
 ```
 
@@ -72,13 +72,13 @@ npm install
 
 ```javascript
 // 默认导入（推荐）
-import Database from '@wilkques/database-node';
+import Database from '@wilkques/database';
 
 // 命名导入（可选）
-import { Database, Builder } from '@wilkques/database-node';
+import { Database, Builder } from '@wilkques/database';
 
 // CommonJS（如果使用 require）
-const Database = require('@wilkques/database-node').default;
+const Database = require('@wilkques/database').default;
 
 // MySQL 连接
 const db = await Database.connect({
