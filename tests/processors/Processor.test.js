@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, jest } from "@jest/globals";
-import Processor from "../../lib/queries/processors/Processor.js";
-import Builder from "../../lib/queries/Builder.js";
+import Processor from "../../dist/lib/queries/processors/Processor.js";
+import Builder from "../../dist/lib/queries/Builder.js";
 
 describe("Processor", () => {
   let processor;

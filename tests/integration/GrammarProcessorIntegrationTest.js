@@ -1,11 +1,11 @@
 import { describe, test, expect, beforeAll } from "@jest/globals";
-import Builder from "../../lib/queries/Builder.js";
-import MySQLGrammar from "../../lib/queries/grammar/MySQL.js";
-import MySQLProcessor from "../../lib/queries/processors/MySQLProcessor.js";
-import PostgreSQLGrammar from "../../lib/queries/grammar/PostgreSQL.js";
-import PostgreSQLProcessor from "../../lib/queries/processors/PostgreSQLProcessor.js";
-import SQLiteGrammar from "../../lib/queries/grammar/SQLite.js";
-import SQLiteProcessor from "../../lib/queries/processors/SQLiteProcessor.js";
+import Builder from "../../dist/lib/queries/Builder.js";
+import MySQLGrammar from "../../dist/lib/queries/grammar/MySQL.js";
+import MySQLProcessor from "../../dist/lib/queries/processors/MySQLProcessor.js";
+import PostgreSQLGrammar from "../../dist/lib/queries/grammar/PostgreSQL.js";
+import PostgreSQLProcessor from "../../dist/lib/queries/processors/PostgreSQLProcessor.js";
+import SQLiteGrammar from "../../dist/lib/queries/grammar/SQLite.js";
+import SQLiteProcessor from "../../dist/lib/queries/processors/SQLiteProcessor.js";
 
 describe("Grammar & Processor Integration", () => {
   let db;

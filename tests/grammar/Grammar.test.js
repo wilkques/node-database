@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from "@jest/globals";
-import Grammar from "../../lib/queries/grammar/Grammar.js";
-import MySQLGrammar from "../../lib/queries/grammar/MySQL.js";
-import Builder from "../../lib/queries/Builder.js";
+import Grammar from "../../dist/lib/queries/grammar/Grammar.js";
+import MySQLGrammar from "../../dist/lib/queries/grammar/MySQL.js";
+import Builder from "../../dist/lib/queries/Builder.js";
 
 describe("Grammar - Base Class Enhancement", () => {
   let grammar;

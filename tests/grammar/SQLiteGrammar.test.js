@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
-import SQLiteGrammar from "../../lib/queries/grammar/SQLite.js";
+import SQLiteGrammar from "../../dist/lib/queries/grammar/SQLite.js";
 
 describe("SQLiteGrammar - Enhanced Features", () => {
   let grammar;

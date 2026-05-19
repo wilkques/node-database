@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
-import PostgreSQLGrammar from "../../lib/queries/grammar/PostgreSQL.js";
+import PostgreSQLGrammar from "../../dist/lib/queries/grammar/PostgreSQL.js";
 
 describe("PostgreSQLGrammar - Enhanced Features", () => {
   let grammar;

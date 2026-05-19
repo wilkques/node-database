@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import SQLiteProcessor from "../../lib/queries/processors/SQLiteProcessor.js";
+import SQLiteProcessor from "../../dist/lib/queries/processors/SQLiteProcessor.js";
 
 describe("SQLiteProcessor", () => {
   let processor;
@@ -59,7 +59,7 @@ describe("SQLiteProcessor", () => {
   describe("processInsert", () => {
     it("should process INSERT results with lastInsertRowId", () => {
       const mockResult = {
-        lastInsertRowId: 42,
+        lastInsertRowid: 42,
         changes: 1,
       };
 
@@ -73,8 +73,8 @@ describe("SQLiteProcessor", () => {
 
     it("should handle different result properties", () => {
       const mockResult = {
-        insertId: 123,
-        affectedRows: 1,
+        lastID: 123,
+        changes: 1,
       };
 
       const result = processor.processInsert(mockResult);

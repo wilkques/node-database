@@ -1,8 +1,8 @@
 import { describe, test, expect } from "@jest/globals";
-import MySQLGrammar from "../../lib/queries/grammar/MySQL.js";
-import PostgreSQLGrammar from "../../lib/queries/grammar/PostgreSQL.js";
-import SQLiteGrammar from "../../lib/queries/grammar/SQLite.js";
-import Builder from "../../lib/queries/Builder.js";
+import MySQLGrammar from "../../dist/lib/queries/grammar/MySQL.js";
+import PostgreSQLGrammar from "../../dist/lib/queries/grammar/PostgreSQL.js";
+import SQLiteGrammar from "../../dist/lib/queries/grammar/SQLite.js";
+import Builder from "../../dist/lib/queries/Builder.js";
 
 describe("Grammar Performance Tests", () => {
   const grammars = [

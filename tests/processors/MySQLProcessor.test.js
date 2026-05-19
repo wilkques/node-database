@@ -1,5 +1,5 @@
 import { describe, test, expect } from "@jest/globals";
-import MySQLProcessor from "../../lib/queries/processors/MySQLProcessor.js";
+import MySQLProcessor from "../../dist/lib/queries/processors/MySQLProcessor.js";
 
 describe("MySQLProcessor", () => {
   let processor;

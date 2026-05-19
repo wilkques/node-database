@@ -4,24 +4,34 @@
     "es2022": true,
     "jest": true
   },
-  "extends": ["eslint:recommended"],
+  "extends": [
+    "eslint:recommended",
+    "@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2022,
-    "sourceType": "module"
+    "sourceType": "module",
+    "project": "./tsconfig.json"
   },
+  "plugins": ["@typescript-eslint"],
   "rules": {
-    "indent": ["warn", 4],
+    "indent": "off",
+    "@typescript-eslint/indent": ["warn", 4],
     "linebreak-style": "off",
     "quotes": ["warn", "single"],
-    "semi": ["error", "always"],
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "semi": "off",
+    "@typescript-eslint/semi": ["error", "always"],
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "no-console": "off",
     "no-debugger": "error",
     "no-var": "error",
     "prefer-const": "error",
     "eqeqeq": ["warn", "always"],
     "curly": ["error", "all"],
-    "brace-style": ["warn", "1tbs"],
+    "brace-style": "off",
+    "@typescript-eslint/brace-style": ["warn", "1tbs"],
     "space-before-blocks": "warn",
     "keyword-spacing": "warn",
     "space-infix-ops": "warn",
@@ -31,9 +41,30 @@
     "no-trailing-spaces": "warn",
     "eol-last": "warn",
     "no-case-declarations": "warn",
-    "no-dupe-class-members": "warn",
-    "no-prototype-builtins": "warn"
+    "no-dupe-class-members": "off",
+    "@typescript-eslint/no-dupe-class-members": "warn",
+    "no-prototype-builtins": "warn",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-inferrable-types": "off",
+    "@typescript-eslint/ban-ts-comment": "warn"
   },
+  "overrides": [
+    {
+      "files": ["*.js"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    },
+    {
+      "files": ["tests/**/*", "examples/**/*"],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": "off",
+        "no-console": "off"
+      }
+    }
+  ],
   "ignorePatterns": [
     "node_modules/",
     "coverage/",
