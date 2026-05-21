@@ -65,7 +65,7 @@ npm install better-sqlite3  # SQLite 数据库
 
 ```bash
 # 克隆仓库
-git clone https://github.com/wilkques/node-database.git
+git clone https://github.com/wilkques/node-database.git database
 cd database
 npm install
 ```

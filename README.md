@@ -65,7 +65,7 @@ npm install better-sqlite3  # For SQLite
 
 ```bash
 # Clone the repository
-git clone https://github.com/wilkques/node-database.git
+git clone https://github.com/wilkques/node-database.git database
 cd database
 npm install
 ```
