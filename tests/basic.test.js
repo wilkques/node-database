@@ -9,12 +9,12 @@ describe("Database Package", () => {
   describe("Basic Functionality", () => {
     test("should export Database class", () => {
       expect(Database).toBeDefined();
-      expect(typeof Database.connect).toBe('function');
+      expect(typeof Database.connect).toBe("function");
     });
 
     test("should have static connect method", () => {
       expect(Database.connect).toBeDefined();
-      expect(typeof Database.connect).toBe('function');
+      expect(typeof Database.connect).toBe("function");
     });
   });
 
@@ -50,7 +50,7 @@ describe("Database Package", () => {
       const queryStructure = {
         table: "users",
         columns: ["id", "name", "email"],
-        where: { field: "id", operator: "=", value: 1 }
+        where: { field: "id", operator: "=", value: 1 },
       };
 
       expect(queryStructure.table).toBe("users");

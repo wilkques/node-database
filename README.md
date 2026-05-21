@@ -65,7 +65,7 @@ npm install better-sqlite3  # For SQLite
 
 ```bash
 # Clone the repository
-git clone https://github.com/wilkques/database.git
+git clone https://github.com/wilkques/node-database.git
 cd database
 npm install
 ```
@@ -308,7 +308,7 @@ npm test
 **Test Coverage:**
 
 - ✅ **156 tests all passed**
-- ✅ **11 test suites covered** 
+- ✅ **11 test suites covered**
 - ✅ **All core functionality verified**
 
 ## 📁 Project Structure
@@ -366,7 +366,9 @@ db.connection.enableQueryLog();
 // Execute some queries
 await db.table("users").select("*").where("active", true).get();
 await db.table("posts").select("title", "content").limit(10).get();
-await db.raw("SELECT COUNT(*) as total FROM orders WHERE status = ?", ["completed"]);
+await db.raw("SELECT COUNT(*) as total FROM orders WHERE status = ?", [
+  "completed",
+]);
 
 // Get query log with detailed information
 const queryLog = db.connection.getQueryLog();
@@ -374,10 +376,10 @@ const queryLog = db.connection.getQueryLog();
 queryLog.forEach((entry, index) => {
   console.log(`Query ${index + 1}:`);
   console.log(`  SQL: ${entry.sql}`);
-  console.log(`  Bindings: [${entry.bindings.join(', ')}]`);
+  console.log(`  Bindings: [${entry.bindings.join(", ")}]`);
   console.log(`  Timestamp: ${entry.timestamp.toISOString()}`);
   console.log(`  Duration: ${entry.duration}ms`);
-  console.log('');
+  console.log("");
 });
 
 // Query log management
@@ -401,24 +403,24 @@ db.connection.disableQueryLog();
 
 #### Database-Specific Logging
 
-```javascript
+````javascript
 // All drivers support the same query logging API
 const drivers = ['mysql', 'postgres', 'sqlite'];
 
 for (const driver of drivers) {
   const db = await Database.connect({ driver, /* other config */ });
-  
+
   // Enable logging - works on all drivers
   db.connection.enableQueryLog();
-  
+
   // Execute queries - automatically logged with timing
   await db.table('users').select('*').get();
-  
+
   // View logs with driver-specific SQL syntax
   const logs = db.connection.getQueryLog();
   console.log(`${driver.toUpperCase()} SQL:`, logs[0].sql);
   // MySQL:      SELECT `id`, `name` FROM `users`
-  // PostgreSQL: SELECT "id", "name" FROM "users" 
+  // PostgreSQL: SELECT "id", "name" FROM "users"
   // SQLite:     SELECT [id], [name] FROM [users]
 }
 
@@ -444,7 +446,7 @@ console.log(`Slow queries (>100ms): ${slowQueries.length}`);
 slowQueries.forEach(query => {
   console.log(`SLOW: ${query.sql} (${query.duration}ms)`);
 });
-```
+````
 
 ## 🤝 Contributing
 

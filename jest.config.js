@@ -5,7 +5,7 @@
 
 export default {
   // Test environment
-  testEnvironment: 'node',
+  testEnvironment: "node",
 
   // Enable ES modules support
   preset: null,
@@ -14,24 +14,17 @@ export default {
   transform: {},
 
   // Test file patterns
-  testMatch: [
-    '**/__tests__/**/*.js',
-    '**/?(*.)+(spec|test).js'
-  ],
+  testMatch: ["**/__tests__/**/*.js", "**/?(*.)+(spec|test).js"],
 
   // Ignore patterns
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    '/dist/',
-    '/build/'
-  ],
+  testPathIgnorePatterns: ["/node_modules/", "/dist/", "/build/"],
 
   // Coverage settings
   collectCoverageFrom: [
-    'dist/**/*.js',
-    '!dist/**/*.test.js',
-    '!dist/**/*.spec.js',
-    '!dist/**/index.js'
+    "dist/**/*.js",
+    "!dist/**/*.test.js",
+    "!dist/**/*.spec.js",
+    "!dist/**/index.js",
   ],
 
   // Setup files
@@ -39,9 +32,9 @@ export default {
 
   // Global settings for ES modules
   globals: {
-    'ts-jest': {
-      useESM: true
-    }
+    "ts-jest": {
+      useESM: true,
+    },
   },
 
   // Verbose output
@@ -51,11 +44,11 @@ export default {
   errorOnDeprecated: false,
 
   // Module file extensions
-  moduleFileExtensions: ['js', 'json', 'ts'],
+  moduleFileExtensions: ["js", "json", "ts"],
 
   // Clear mocks between tests
   clearMocks: true,
 
   // Restore mocks after each test
-  restoreMocks: true
+  restoreMocks: true,
 };

@@ -30,7 +30,13 @@
     "format": "prettier --write .",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build && npm test && npm run lint",
-    "prepare": "npm run format"
+    "prepare": "npm run format",
+    "pack:test": "npm pack --dry-run",
+    "pack:local": "npm pack",
+    "pre-publish": "node scripts/pre-publish-check.js",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major"
   },
   "keywords": [
     "database",
@@ -44,20 +50,16 @@
   ],
   "author": "wilkques",
   "license": "MIT",
-  "homepage": "https://github.com/wilkques/database#readme",
+  "homepage": "https://github.com/wilkques/node-database#readme",
   "bugs": {
-    "url": "https://github.com/wilkques/database/issues"
+    "url": "https://github.com/wilkques/node-database/issues"
   },
   "files": [
     "dist/",
     "README.md",
     "LICENSE"
   ],
-  "dependencies": {
-    "mysql2": "^3.0.0",
-    "pg": "^8.0.0",
-    "sqlite3": "^5.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "^25.9.0",
@@ -75,12 +77,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wilkques/database"
+    "url": "https://github.com/wilkques/node-database"
   },
   "peerDependencies": {
     "mysql2": "^3.0.0",
     "pg": "^8.0.0",
     "sqlite3": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "mysql2": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "sqlite3": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

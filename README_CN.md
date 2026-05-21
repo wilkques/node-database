@@ -65,7 +65,7 @@ npm install better-sqlite3  # SQLite 数据库
 
 ```bash
 # 克隆仓库
-git clone https://github.com/wilkques/database.git
+git clone https://github.com/wilkques/node-database.git
 cd database
 npm install
 ```
@@ -281,8 +281,8 @@ try {
 
 ## 💾 支持的数据库
 
-| 数据库         | 版本支持 | 驱动           | 功能支持    | 查询日志 |
-| -------------- | -------- | -------------- | ----------- | -------- |
+| 数据库         | 版本支持 | 驱动           | 功能支持    | 查询日志  |
+| -------------- | -------- | -------------- | ----------- | --------- |
 | **MySQL**      | 5.7+     | mysql2         | ✅ 完全支持 | ✅ 已启用 |
 | **PostgreSQL** | 9.6+     | pg             | ✅ 完全支持 | ✅ 已启用 |
 | **SQLite**     | 3.x      | better-sqlite3 | ✅ 完全支持 | ✅ 已启用 |
@@ -366,7 +366,9 @@ db.connection.enableQueryLog();
 // 执行一些查询
 await db.table("users").select("*").where("active", true).get();
 await db.table("posts").select("title", "content").limit(10).get();
-await db.raw("SELECT COUNT(*) as total FROM orders WHERE status = ?", ["completed"]);
+await db.raw("SELECT COUNT(*) as total FROM orders WHERE status = ?", [
+  "completed",
+]);
 
 // 获取详细的查询日志信息
 const queryLog = db.connection.getQueryLog();
@@ -374,10 +376,10 @@ const queryLog = db.connection.getQueryLog();
 queryLog.forEach((entry, index) => {
   console.log(`查询 ${index + 1}:`);
   console.log(`  SQL: ${entry.sql}`);
-  console.log(`  参数: [${entry.bindings.join(', ')}]`);
+  console.log(`  参数: [${entry.bindings.join(", ")}]`);
   console.log(`  时间戳: ${entry.timestamp.toISOString()}`);
   console.log(`  耗时: ${entry.duration}ms`);
-  console.log('');
+  console.log("");
 });
 
 // 查询日志管理
@@ -403,22 +405,22 @@ db.connection.disableQueryLog();
 
 ```javascript
 // 所有驱动都支持相同的查询日志 API
-const drivers = ['mysql', 'postgres', 'sqlite'];
+const drivers = ["mysql", "postgres", "sqlite"];
 
 for (const driver of drivers) {
-  const db = await Database.connect({ driver, /* 其他配置 */ });
-  
+  const db = await Database.connect({ driver /* 其他配置 */ });
+
   // 启用日志记录 - 在所有驱动上都有效
   db.connection.enableQueryLog();
-  
+
   // 执行查询 - 自动记录并计时
-  await db.table('users').select('*').get();
-  
+  await db.table("users").select("*").get();
+
   // 查看具有驱动特定 SQL 语法的日志
   const logs = db.connection.getQueryLog();
   console.log(`${driver.toUpperCase()} SQL:`, logs[0].sql);
   // MySQL:      SELECT `id`, `name` FROM `users`
-  // PostgreSQL: SELECT "id", "name" FROM "users" 
+  // PostgreSQL: SELECT "id", "name" FROM "users"
   // SQLite:     SELECT [id], [name] FROM [users]
 }
 ```
@@ -434,7 +436,7 @@ await executeApplicationQueries();
 const logs = db.connection.getQueryLog();
 const totalTime = logs.reduce((sum, entry) => sum + entry.duration, 0);
 const avgTime = totalTime / logs.length;
-const slowQueries = logs.filter(entry => entry.duration > 100); // > 100ms
+const slowQueries = logs.filter((entry) => entry.duration > 100); // > 100ms
 
 console.log(`查询总数: ${logs.length}`);
 console.log(`总执行时间: ${totalTime}ms`);
@@ -442,7 +444,7 @@ console.log(`平均查询时间: ${avgTime.toFixed(2)}ms`);
 console.log(`慢查询 (>100ms): ${slowQueries.length}`);
 
 // 记录慢查询以进行优化
-slowQueries.forEach(query => {
+slowQueries.forEach((query) => {
   console.log(`慢查询: ${query.sql} (${query.duration}ms)`);
 });
 ```
