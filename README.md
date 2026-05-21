@@ -4,7 +4,7 @@
 
 ![Node.js](https://img.shields.io/badge/Node.js-v16+-green.svg)
 ![Databases](https://img.shields.io/badge/MySQL%20%7C%20PostgreSQL%20%7C%20SQLite-blue.svg)
-![Tests](https://img.shields.io/badge/Tests-149%20Passed-brightgreen.svg)
+![Tests](https://img.shields.io/badge/Tests-156%20Passed-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 **Modern Node.js Database Query Builder**  
@@ -45,6 +45,7 @@ A powerful, type-safe Node.js database query builder with fluent API and complet
 - **🧮 Data Modification** - INSERT, UPDATE, DELETE, UPSERT
 - **🔢 Atomic Operations** - INCREMENT, DECREMENT atomic counters
 - **📋 Batch Operations** - Optimized batch insert and update
+- **📊 Query Logging** - Comprehensive query debugging and performance monitoring
 
 ## 📦 Installation
 
@@ -271,6 +272,7 @@ try {
 - **[JOIN Operations](docs/examples/joins.md)** - Complete guide to table joins
 - **[Data Modification](docs/examples/data-modification.md)** - CRUD operations explained
 - **[Transaction Handling](docs/examples/transactions.md)** - Transaction management and data consistency
+- **[Query Logging](docs/examples/query-logging.md)** - Debugging and performance monitoring
 
 ### System Documentation
 
@@ -279,11 +281,21 @@ try {
 
 ## 💾 Supported Databases
 
-| Database       | Version Support | Driver         | Feature Support |
-| -------------- | --------------- | -------------- | --------------- |
-| **MySQL**      | 5.7+            | mysql2         | ✅ Full Support |
-| **PostgreSQL** | 9.6+            | pg             | ✅ Full Support |
-| **SQLite**     | 3.x             | better-sqlite3 | ✅ Full Support |
+| Database       | Version Support | Driver         | Feature Support | Query Logging |
+| -------------- | --------------- | -------------- | --------------- | ------------- |
+| **MySQL**      | 5.7+            | mysql2         | ✅ Full Support | ✅ Enabled    |
+| **PostgreSQL** | 9.6+            | pg             | ✅ Full Support | ✅ Enabled    |
+| **SQLite**     | 3.x             | better-sqlite3 | ✅ Full Support | ✅ Enabled    |
+
+### Query Logging Support
+
+All database drivers now support comprehensive query logging with:
+
+- **📝 SQL Statement Logging** - Complete query text with proper syntax highlighting
+- **⚙️ Parameter Binding** - All query parameters and their values
+- **⏱️ Execution Timing** - Precise query execution duration in milliseconds
+- **🕐 Timestamp Tracking** - Exact time when each query was executed
+- **🎛️ Log Management** - Enable, disable, clear, and retrieve query logs
 
 ## 🧪 Testing
 
@@ -295,8 +307,8 @@ npm test
 
 **Test Coverage:**
 
-- ✅ **149 tests all passed**
-- ✅ **9 test suites covered**
+- ✅ **156 tests all passed**
+- ✅ **11 test suites covered** 
 - ✅ **All core functionality verified**
 
 ## 📁 Project Structure
@@ -345,13 +357,93 @@ const activeUsers = await db
   .get();
 ```
 
-### Query Optimization
+### Query Logging & Debugging
 
 ```javascript
-// Query logging
+// Enable query logging
 db.connection.enableQueryLog();
-const result = await db.table("users").get();
-console.log(db.connection.getQueryLog());
+
+// Execute some queries
+await db.table("users").select("*").where("active", true).get();
+await db.table("posts").select("title", "content").limit(10).get();
+await db.raw("SELECT COUNT(*) as total FROM orders WHERE status = ?", ["completed"]);
+
+// Get query log with detailed information
+const queryLog = db.connection.getQueryLog();
+
+queryLog.forEach((entry, index) => {
+  console.log(`Query ${index + 1}:`);
+  console.log(`  SQL: ${entry.sql}`);
+  console.log(`  Bindings: [${entry.bindings.join(', ')}]`);
+  console.log(`  Timestamp: ${entry.timestamp.toISOString()}`);
+  console.log(`  Duration: ${entry.duration}ms`);
+  console.log('');
+});
+
+// Query log management
+console.log(`Total queries logged: ${queryLog.length}`);
+console.log(`Logging enabled: ${db.connection.isQueryLogEnabled()}`);
+
+// Clear the log
+db.connection.clearQueryLog();
+
+// Disable logging
+db.connection.disableQueryLog();
+```
+
+### Query Log Features
+
+- **📊 Detailed Logging** - Captures SQL, bindings, timestamps, and execution time
+- **🔍 Performance Monitoring** - Track query execution duration for optimization
+- **🛠️ Debugging Support** - Full query history for troubleshooting
+- **📈 Statistics** - Analyze query patterns and performance metrics
+- **🎯 Universal Support** - Available across all database drivers (MySQL, PostgreSQL, SQLite)
+
+#### Database-Specific Logging
+
+```javascript
+// All drivers support the same query logging API
+const drivers = ['mysql', 'postgres', 'sqlite'];
+
+for (const driver of drivers) {
+  const db = await Database.connect({ driver, /* other config */ });
+  
+  // Enable logging - works on all drivers
+  db.connection.enableQueryLog();
+  
+  // Execute queries - automatically logged with timing
+  await db.table('users').select('*').get();
+  
+  // View logs with driver-specific SQL syntax
+  const logs = db.connection.getQueryLog();
+  console.log(`${driver.toUpperCase()} SQL:`, logs[0].sql);
+  // MySQL:      SELECT `id`, `name` FROM `users`
+  // PostgreSQL: SELECT "id", "name" FROM "users" 
+  // SQLite:     SELECT [id], [name] FROM [users]
+}
+
+```javascript
+// Performance analysis example
+db.connection.enableQueryLog();
+
+// Execute your application queries
+await executeApplicationQueries();
+
+// Analyze performance
+const logs = db.connection.getQueryLog();
+const totalTime = logs.reduce((sum, entry) => sum + entry.duration, 0);
+const avgTime = totalTime / logs.length;
+const slowQueries = logs.filter(entry => entry.duration > 100); // > 100ms
+
+console.log(`Total queries: ${logs.length}`);
+console.log(`Total execution time: ${totalTime}ms`);
+console.log(`Average query time: ${avgTime.toFixed(2)}ms`);
+console.log(`Slow queries (>100ms): ${slowQueries.length}`);
+
+// Log slow queries for optimization
+slowQueries.forEach(query => {
+  console.log(`SLOW: ${query.sql} (${query.duration}ms)`);
+});
 ```
 
 ## 🤝 Contributing

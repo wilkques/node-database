@@ -64,8 +64,12 @@ export default class MySqlDriver extends Connection {
         if (!connection) {
             throw new Error('No MySQL connection available');
         }
+        const startTime = Date.now();
         try {
             const [results, fields] = await connection.execute(sql, bindings);
+            // Log query with execution time
+            const duration = Date.now() - startTime;
+            this._logQuery(sql, bindings, duration);
             return {
                 rows: Array.isArray(results) ? results : [results],
                 fields,

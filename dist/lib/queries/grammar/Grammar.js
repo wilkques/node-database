@@ -263,6 +263,18 @@ export default class Grammar {
     wrapTable(table) {
         // Handle case where table might be an object with table property
         const tableName = typeof table === 'string' ? table : (table?.table || table?.from || 'users');
+        // Handle subquery tables that start with parentheses
+        if (tableName.startsWith('(') && tableName.includes(') AS ')) {
+            // For subqueries like "(SELECT ...) AS alias", only wrap the alias
+            const parts = tableName.split(') AS ');
+            const subquery = parts[0] + ')'; // Keep the closing parenthesis
+            const alias = parts[1].trim();
+            // Check if alias is already wrapped with backticks
+            const wrappedAlias = alias.startsWith('`') && alias.endsWith('`')
+                ? alias
+                : this.wrap(alias);
+            return `${subquery} AS ${wrappedAlias}`;
+        }
         if (tableName.includes(' as ')) {
             const parts = tableName.split(' as ');
             return `${this.wrap(parts[0].trim())} AS ${this.wrap(parts[1].trim())}`;
@@ -280,8 +292,15 @@ export default class Grammar {
         const strValue = String(value);
         if (strValue === '*')
             return strValue;
+        // Handle table.* pattern (like gm.*, gs.*)
         if (strValue.includes('.')) {
-            return strValue.split('.').map(part => `\`${part}\``).join('.');
+            const parts = strValue.split('.');
+            if (parts[parts.length - 1] === '*') {
+                // For table.*, wrap table name but keep * as is
+                const tablePart = parts.slice(0, -1).map(part => `\`${part}\``).join('.');
+                return `${tablePart}.*`;
+            }
+            return parts.map(part => `\`${part}\``).join('.');
         }
         return `\`${strValue}\``;
     }

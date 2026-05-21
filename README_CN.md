@@ -4,7 +4,7 @@
 
 ![Node.js](https://img.shields.io/badge/Node.js-v16+-green.svg)
 ![Databases](https://img.shields.io/badge/MySQL%20%7C%20PostgreSQL%20%7C%20SQLite-blue.svg)
-![Tests](https://img.shields.io/badge/Tests-149%20Passed-brightgreen.svg)
+![Tests](https://img.shields.io/badge/Tests-156%20Passed-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 **现代 Node.js 数据库查询构建器**  
@@ -45,6 +45,7 @@ _支持 MySQL、PostgreSQL 和 SQLite_
 - **🧮 数据修改** - INSERT、UPDATE、DELETE、UPSERT
 - **🔢 原子操作** - INCREMENT、DECREMENT 原子计数器
 - **📋 批量操作** - 优化的批量插入和更新
+- **📊 查询日志** - 全面的查询调试和性能监控
 
 ## 📦 安装
 
@@ -271,6 +272,7 @@ try {
 - **[联表操作](docs/examples/joins_CN.md)** - 表联接完整指南
 - **[数据修改](docs/examples/data-modification_CN.md)** - CRUD 操作详解
 - **[事务处理](docs/examples/transactions_CN.md)** - 事务管理和数据一致性
+- **[查询日志](docs/examples/query-logging_CN.md)** - 调试和性能监控
 
 ### 系统文档
 
@@ -279,11 +281,21 @@ try {
 
 ## 💾 支持的数据库
 
-| 数据库         | 版本支持 | 驱动           | 功能支持    |
-| -------------- | -------- | -------------- | ----------- |
-| **MySQL**      | 5.7+     | mysql2         | ✅ 完全支持 |
-| **PostgreSQL** | 9.6+     | pg             | ✅ 完全支持 |
-| **SQLite**     | 3.x      | better-sqlite3 | ✅ 完全支持 |
+| 数据库         | 版本支持 | 驱动           | 功能支持    | 查询日志 |
+| -------------- | -------- | -------------- | ----------- | -------- |
+| **MySQL**      | 5.7+     | mysql2         | ✅ 完全支持 | ✅ 已启用 |
+| **PostgreSQL** | 9.6+     | pg             | ✅ 完全支持 | ✅ 已启用 |
+| **SQLite**     | 3.x      | better-sqlite3 | ✅ 完全支持 | ✅ 已启用 |
+
+### 查询日志支持
+
+所有数据库驱动现在都支持全面的查询日志记录：
+
+- **📝 SQL 语句记录** - 带有正确语法高亮的完整查询文本
+- **⚙️ 参数绑定** - 所有查询参数及其值
+- **⏱️ 执行计时** - 精确的查询执行时间（毫秒）
+- **🕐 时间戳跟踪** - 每个查询执行的确切时间
+- **🎛️ 日志管理** - 启用、禁用、清除和检索查询日志
 
 ## 🧪 测试
 
@@ -295,8 +307,8 @@ npm test
 
 **测试覆盖率：**
 
-- ✅ **149 个测试全部通过**
-- ✅ **9 个测试套件覆盖**
+- ✅ **156 个测试全部通过**
+- ✅ **11 个测试套件覆盖**
 - ✅ **所有核心功能已验证**
 
 ## 📁 项目结构
@@ -345,13 +357,94 @@ const activeUsers = await db
   .get();
 ```
 
-### 查询优化
+### 查询日志和调试
 
 ```javascript
-// 查询日志
+// 启用查询日志
 db.connection.enableQueryLog();
-const result = await db.table("users").get();
-console.log(db.connection.getQueryLog());
+
+// 执行一些查询
+await db.table("users").select("*").where("active", true).get();
+await db.table("posts").select("title", "content").limit(10).get();
+await db.raw("SELECT COUNT(*) as total FROM orders WHERE status = ?", ["completed"]);
+
+// 获取详细的查询日志信息
+const queryLog = db.connection.getQueryLog();
+
+queryLog.forEach((entry, index) => {
+  console.log(`查询 ${index + 1}:`);
+  console.log(`  SQL: ${entry.sql}`);
+  console.log(`  参数: [${entry.bindings.join(', ')}]`);
+  console.log(`  时间戳: ${entry.timestamp.toISOString()}`);
+  console.log(`  耗时: ${entry.duration}ms`);
+  console.log('');
+});
+
+// 查询日志管理
+console.log(`记录的查询总数: ${queryLog.length}`);
+console.log(`日志已启用: ${db.connection.isQueryLogEnabled()}`);
+
+// 清空日志
+db.connection.clearQueryLog();
+
+// 禁用日志
+db.connection.disableQueryLog();
+```
+
+### 查询日志功能特性
+
+- **📊 详细日志记录** - 捕获 SQL、参数、时间戳和执行时间
+- **🔍 性能监控** - 跟踪查询执行时间以进行优化
+- **🛠️ 调试支持** - 完整的查询历史记录用于故障排除
+- **📈 统计分析** - 分析查询模式和性能指标
+- **🎯 全面支持** - 在所有数据库驱动 (MySQL、PostgreSQL、SQLite) 中可用
+
+#### 数据库特定日志记录
+
+```javascript
+// 所有驱动都支持相同的查询日志 API
+const drivers = ['mysql', 'postgres', 'sqlite'];
+
+for (const driver of drivers) {
+  const db = await Database.connect({ driver, /* 其他配置 */ });
+  
+  // 启用日志记录 - 在所有驱动上都有效
+  db.connection.enableQueryLog();
+  
+  // 执行查询 - 自动记录并计时
+  await db.table('users').select('*').get();
+  
+  // 查看具有驱动特定 SQL 语法的日志
+  const logs = db.connection.getQueryLog();
+  console.log(`${driver.toUpperCase()} SQL:`, logs[0].sql);
+  // MySQL:      SELECT `id`, `name` FROM `users`
+  // PostgreSQL: SELECT "id", "name" FROM "users" 
+  // SQLite:     SELECT [id], [name] FROM [users]
+}
+```
+
+```javascript
+// 性能分析示例
+db.connection.enableQueryLog();
+
+// 执行应用程序查询
+await executeApplicationQueries();
+
+// 分析性能
+const logs = db.connection.getQueryLog();
+const totalTime = logs.reduce((sum, entry) => sum + entry.duration, 0);
+const avgTime = totalTime / logs.length;
+const slowQueries = logs.filter(entry => entry.duration > 100); // > 100ms
+
+console.log(`查询总数: ${logs.length}`);
+console.log(`总执行时间: ${totalTime}ms`);
+console.log(`平均查询时间: ${avgTime.toFixed(2)}ms`);
+console.log(`慢查询 (>100ms): ${slowQueries.length}`);
+
+// 记录慢查询以进行优化
+slowQueries.forEach(query => {
+  console.log(`慢查询: ${query.sql} (${query.duration}ms)`);
+});
 ```
 
 ## 🤝 贡献

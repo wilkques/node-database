@@ -18,8 +18,26 @@ export default class MySQL extends Grammar {
         if (strValue === '*') return strValue;
         if (strValue === '' || strValue === 'undefined' || strValue === 'null') return '';
 
+        // Handle column AS alias pattern (e.g., "table.column as alias")
+        if (strValue.includes(' as ') || strValue.includes(' AS ')) {
+            const asIndex = strValue.toLowerCase().indexOf(' as ');
+            const columnPart = strValue.substring(0, asIndex).trim();
+            const aliasPart = strValue.substring(asIndex + 4).trim();
+
+            const wrappedColumn = this.wrap(columnPart);
+            const wrappedAlias = this.wrap(aliasPart);
+
+            return `${wrappedColumn} AS ${wrappedAlias}`;
+        }
+
         if (strValue.includes('.')) {
-            return strValue.split('.').map(part => `\`${part}\``).join('.');
+            const parts = strValue.split('.');
+            if (parts[parts.length - 1] === '*') {
+                // For table.*, wrap table name but keep * as is
+                const tablePart = parts.slice(0, -1).map(part => `\`${part}\``).join('.');
+                return `${tablePart}.*`;
+            }
+            return parts.map(part => `\`${part}\``).join('.');
         }
         return `\`${strValue}\``;
     }
@@ -172,10 +190,12 @@ export default class MySQL extends Grammar {
         let sql = `UPDATE ${table}`;
 
         // Add JOINs if present
-        if (builder.components && builder.components.joins && builder.components.joins.length > 0) {
-            for (const join of builder.components.joins) {
+        const joins = builder.components?.joins || builder.queries?.joins?.queries || [];
+        if (joins.length > 0) {
+            for (const join of joins) {
                 const joinTable = this.wrapTable(join.table);
-                sql += ` ${join.type.toUpperCase()} JOIN ${joinTable} ON ${join.condition}`;
+                const condition = join.condition || `${this.wrap(join.first)} ${join.operator} ${this.wrap(join.second)}`;
+                sql += ` ${join.type.toUpperCase()} JOIN ${joinTable} ON ${condition}`;
             }
         }
 
@@ -193,10 +213,12 @@ export default class MySQL extends Grammar {
         let sql = `DELETE ${table} FROM ${table}`;
 
         // Add JOINs if present
-        if (builder.components && builder.components.joins && builder.components.joins.length > 0) {
-            for (const join of builder.components.joins) {
+        const joins = builder.components?.joins || builder.queries?.joins?.queries || [];
+        if (joins.length > 0) {
+            for (const join of joins) {
                 const joinTable = this.wrapTable(join.table);
-                sql += ` ${join.type.toUpperCase()} JOIN ${joinTable} ON ${join.condition}`;
+                const condition = join.condition || `${this.wrap(join.first)} ${join.operator} ${this.wrap(join.second)}`;
+                sql += ` ${join.type.toUpperCase()} JOIN ${joinTable} ON ${condition}`;
             }
         }
 

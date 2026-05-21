@@ -59,8 +59,12 @@ export default class PostgreSQLDriver extends Connection {
         if (!client) {
             throw new Error('No PostgreSQL connection available');
         }
+        const startTime = Date.now();
         try {
             const result = await client.query(sql, bindings);
+            // Log query with execution time
+            const duration = Date.now() - startTime;
+            this._logQuery(sql, bindings, duration);
             return {
                 rows: result.rows,
                 fields: result.fields,

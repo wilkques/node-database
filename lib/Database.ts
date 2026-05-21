@@ -7,6 +7,9 @@
 
 import Builder from "./queries/Builder.js";
 import Processor from "./queries/processors/Processor.js";
+import MySQL from "./queries/grammar/MySQL.js";
+import PostgreSQL from "./queries/grammar/PostgreSQL.js";
+import SQLite from "./queries/grammar/SQLite.js";
 
 // 数据库配置接口
 export interface DatabaseConfig {
@@ -171,8 +174,25 @@ class Database {
             );
         }
 
-        // Create and return query builder
-        const builder = new Builder(connection);
+        // Create grammar based on driver
+        let grammar;
+        switch (config.driver) {
+            case "mysql":
+                grammar = new MySQL();
+                break;
+            case "postgres":
+            case "postgresql":
+                grammar = new PostgreSQL();
+                break;
+            case "sqlite":
+                grammar = new SQLite();
+                break;
+            default:
+                throw new Error(`Unsupported database driver: ${config.driver}`);
+        }
+
+        // Create and return query builder with grammar
+        const builder = new Builder(connection, grammar);
         builder.setProcessor(new Processor());
 
         return builder;
@@ -184,8 +204,8 @@ class Database {
      * @param connection - 数据库连接实例
      * @returns 查询构建器实例
      */
-    static createBuilder(connection: any): Builder {
-        const builder = new Builder(connection);
+    static createBuilder(connection: any, grammar?: any): Builder {
+        const builder = new Builder(connection, grammar);
         builder.setProcessor(new Processor());
         return builder;
     }

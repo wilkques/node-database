@@ -35,6 +35,12 @@ export interface QueryResult {
     changes?: number;
     lastInsertRowid?: number;
 }
+export interface QueryLogEntry {
+    sql: string;
+    bindings: any[];
+    timestamp: Date;
+    duration?: number;
+}
 export interface ConnectionInterface {
     connect(): Promise<void>;
     disconnect(): Promise<void>;
@@ -49,6 +55,8 @@ export default class Connection implements ConnectionInterface {
     protected config: ConnectionConfig;
     protected client: any;
     protected inTransaction: boolean;
+    protected loggingQueries: boolean;
+    protected queryLog: QueryLogEntry[];
     constructor(config: ConnectionConfig);
     connect(): Promise<void>;
     disconnect(): Promise<void>;
@@ -60,5 +68,38 @@ export default class Connection implements ConnectionInterface {
     escape(value: any): string;
     getConfig(): ConnectionConfig;
     isInTransaction(): boolean;
+    /**
+     * Enable query logging
+     * @returns {this}
+     */
+    enableQueryLog(): this;
+    /**
+     * Disable query logging
+     * @returns {this}
+     */
+    disableQueryLog(): this;
+    /**
+     * Check if query logging is enabled
+     * @returns {boolean}
+     */
+    isQueryLogEnabled(): boolean;
+    /**
+     * Get query log
+     * @returns {QueryLogEntry[]}
+     */
+    getQueryLog(): QueryLogEntry[];
+    /**
+     * Clear query log
+     * @returns {this}
+     */
+    clearQueryLog(): this;
+    /**
+     * Log query for debugging
+     * @param {string} sql - SQL query
+     * @param {any[]} bindings - Query bindings
+     * @param {number} duration - Query execution duration in milliseconds
+     * @protected
+     */
+    protected _logQuery(sql: string, bindings?: any[], duration?: number): void;
 }
 //# sourceMappingURL=Connection.d.ts.map

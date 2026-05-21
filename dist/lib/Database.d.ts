@@ -61,7 +61,7 @@ declare class Database {
      * @param connection - 数据库连接实例
      * @returns 查询构建器实例
      */
-    static createBuilder(connection: any): Builder;
+    static createBuilder(connection: any, grammar?: any): Builder;
     /**
      * 创建事务
      *

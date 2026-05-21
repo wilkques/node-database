@@ -72,24 +72,33 @@ export default class SQLiteDriver extends Connection {
             throw new Error('No SQLite connection available');
         }
 
+        const startTime = Date.now();
+        let result: QueryResult;
+
         try {
             // Determine query type
             const sqlType = sql.trim().toLowerCase();
 
             if (sqlType.startsWith('select')) {
                 const rows = await this.db.allAsync!(sql, ...bindings);
-                return {
+                result = {
                     rows: rows || [],
                     affectedRows: 0
                 };
             } else {
-                const result = await this.db.runAsync!(sql, ...bindings);
-                return {
+                const runResult = await this.db.runAsync!(sql, ...bindings);
+                result = {
                     rows: [],
-                    affectedRows: result.changes || 0,
-                    insertId: result.lastID || 0
+                    affectedRows: runResult.changes || 0,
+                    insertId: runResult.lastID || 0
                 };
             }
+
+            // Log query with execution time
+            const duration = Date.now() - startTime;
+            this._logQuery(sql, bindings, duration);
+
+            return result;
         } catch (error: any) {
             throw new Error(`SQLite query failed: ${error.message}`);
         }

@@ -8,6 +8,9 @@ export default class Connection {
     config;
     client;
     inTransaction = false;
+    // Query logging properties
+    loggingQueries = false;
+    queryLog = [];
     constructor(config) {
         this.config = config;
     }
@@ -52,6 +55,62 @@ export default class Connection {
     }
     isInTransaction() {
         return this.inTransaction;
+    }
+    // Query logging methods
+    /**
+     * Enable query logging
+     * @returns {this}
+     */
+    enableQueryLog() {
+        this.loggingQueries = true;
+        return this;
+    }
+    /**
+     * Disable query logging
+     * @returns {this}
+     */
+    disableQueryLog() {
+        this.loggingQueries = false;
+        return this;
+    }
+    /**
+     * Check if query logging is enabled
+     * @returns {boolean}
+     */
+    isQueryLogEnabled() {
+        return this.loggingQueries;
+    }
+    /**
+     * Get query log
+     * @returns {QueryLogEntry[]}
+     */
+    getQueryLog() {
+        return [...this.queryLog]; // Return copy to prevent external modification
+    }
+    /**
+     * Clear query log
+     * @returns {this}
+     */
+    clearQueryLog() {
+        this.queryLog = [];
+        return this;
+    }
+    /**
+     * Log query for debugging
+     * @param {string} sql - SQL query
+     * @param {any[]} bindings - Query bindings
+     * @param {number} duration - Query execution duration in milliseconds
+     * @protected
+     */
+    _logQuery(sql, bindings = [], duration) {
+        if (this.loggingQueries) {
+            this.queryLog.push({
+                sql,
+                bindings: [...bindings], // Copy bindings to prevent reference issues
+                timestamp: new Date(),
+                duration
+            });
+        }
     }
 }
 //# sourceMappingURL=Connection.js.map
