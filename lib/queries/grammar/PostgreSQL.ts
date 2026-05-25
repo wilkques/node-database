@@ -1,12 +1,87 @@
 /**
- * PostgreSQL Grammar - PostgreSQL-specific SQL compilation
+ * PostgreSQL Grammar - PostgreSQL-specific SQL compilation and optimization
+ *
+ * Extends the base Grammar class to provide PostgreSQL-specific SQL generation,
+ * including proper identifier quoting, parameter placeholder formatting, and
+ * PostgreSQL-unique features like RETURNING clauses and array operations.
+ *
+ * ## PostgreSQL-Specific Features
+ *
+ * - **Double Quote Identifiers**: Uses double quotes for table/column quoting
+ * - **$n Parameter Placeholders**: Numbered parameters ($1, $2, etc.)
+ * - **RETURNING Clauses**: Support for INSERT/UPDATE RETURNING syntax
+ * - **Array Data Types**: Native PostgreSQL array handling
+ * - **Serial Sequences**: Auto-increment sequence support
+ * - **UPSERT**: ON CONFLICT DO UPDATE syntax
+ * - **Window Functions**: Advanced analytical function support
+ *
+ * ## Identifier Quoting
+ *
+ * PostgreSQL uses double quotes (") for identifier quoting:
+ * - Table names: `"users"`
+ * - Column names: `"email"`
+ * - Aliases: `"users" AS "u"`
+ *
+ * ## Parameter Binding
+ *
+ * PostgreSQL uses numbered parameter placeholders ($1, $2, $3...)
+ * instead of the standard ? placeholders used by other databases.
+ *
+ * ## Case Sensitivity
+ *
+ * - Unquoted identifiers are case-insensitive (converted to lowercase)
+ * - Quoted identifiers preserve exact case
+ * - SQL keywords are case-insensitive
+ *
+ * ## Compatibility
+ *
+ * Supports PostgreSQL 9.6+ with full feature compatibility.
+ * Tested with pg (node-postgres) driver.
+ *
+ * @since 1.0.0
  */
 
 import Grammar from "./Grammar.js";
 
 export default class PostgreSQL extends Grammar {
   /**
-   * Wrap column/table identifier for PostgreSQL
+   * Wrap column/table identifier using PostgreSQL double-quote syntax
+   *
+   * PostgreSQL uses double quotes (") to quote identifiers, which preserves
+   * case sensitivity and allows the use of reserved keywords and special
+   * characters in table and column names.
+   *
+   * ## PostgreSQL Identifier Rules
+   *
+   * - Double quotes preserve exact case sensitivity
+   * - Unquoted identifiers are converted to lowercase
+   * - Reserved words can be used as identifiers when quoted
+   * - Special characters and Unicode are supported within quotes
+   * - Maximum identifier length is 63 characters (NAMEDATALEN-1)
+   *
+   * ## Case Handling
+   *
+   * ```sql
+   * -- These are equivalent (unquoted):
+   * SELECT name FROM users;
+   * SELECT NAME FROM USERS;
+   *
+   * -- These are different (quoted):
+   * SELECT "Name" FROM "Users";  -- Exact case preserved
+   * SELECT "name" FROM "users";  -- Different from above
+   * ```
+   *
+   * @param value - Identifier to wrap with PostgreSQL double quotes
+   * @returns Identifier wrapped with PostgreSQL double-quote syntax
+   *
+   * @example
+   * ```typescript
+   * // PostgreSQL-specific wrapping
+   * wrap('user');           // '"user"'
+   * wrap('users.email');    // '"users"."email"'
+   * wrap('User');           // '"User"' (case preserved)
+   * wrap('select');         // '"select"' (reserved word safely quoted)
+   * ```
    */
   protected wrap(value: string | any): string {
     // Handle array case - if it's an array that got passed by mistake

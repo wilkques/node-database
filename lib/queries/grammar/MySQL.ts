@@ -1,12 +1,70 @@
 /**
- * MySQL Grammar - MySQL-specific SQL compilation
+ * MySQL Grammar - MySQL-specific SQL compilation and optimization
+ *
+ * Extends the base Grammar class to provide MySQL-specific SQL generation,
+ * optimizations, and feature support. This grammar handles MySQL's unique
+ * syntax requirements and provides access to MySQL-only features.
+ *
+ * ## MySQL-Specific Features
+ *
+ * - **Backtick Identifiers**: Uses backticks for table/column quoting
+ * - **LIMIT with OFFSET**: Handles MySQL's LIMIT/OFFSET syntax requirements
+ * - **INSERT IGNORE**: Supports INSERT IGNORE for duplicate key handling
+ * - **ON DUPLICATE KEY UPDATE**: MySQL's upsert functionality
+ * - **REPLACE**: Complete row replacement syntax
+ * - **Row Locking**: FOR UPDATE and LOCK IN SHARE MODE support
+ * - **Date Functions**: MySQL-specific date formatting functions
+ *
+ * ## Identifier Quoting
+ *
+ * MySQL uses backticks (`) for identifier quoting:
+ * - Table names: `` `users` ``
+ * - Column names: `` `email` ``
+ * - Aliases: `` `users` AS `u` ``
+ *
+ * ## LIMIT/OFFSET Behavior
+ *
+ * MySQL requires LIMIT when using OFFSET. If only OFFSET is specified,
+ * LIMIT is set to the maximum possible value (18446744073709551615).
+ *
+ * ## Compatibility
+ *
+ * Supports MySQL 5.7+ with full feature compatibility.
+ * Tested with mysql2 driver for Node.js.
+ *
+ * @since 1.0.0
  */
 
 import Grammar from "./Grammar.js";
 
 export default class MySQL extends Grammar {
   /**
-   * Wrap column/table identifier for MySQL
+   * Wrap column/table identifier using MySQL backtick syntax
+   *
+   * MySQL uses backticks (`) to quote identifiers, which allows the use of
+   * reserved keywords and special characters in table and column names.
+   *
+   * ## MySQL Identifier Rules
+   *
+   * - Backticks allow reserved words as identifiers
+   * - Special characters and spaces are supported within backticks
+   * - Case sensitivity depends on the underlying file system
+   * - Maximum identifier length is 64 characters
+   *
+   * ## Escaping
+   *
+   * Backticks within identifiers are escaped by doubling: `` `table`name` `` → `` `table``name` ``
+   *
+   * @param value - Identifier to wrap with MySQL backticks
+   * @returns Identifier wrapped with MySQL backtick syntax
+   *
+   * @example
+   * ```typescript
+   * // MySQL-specific wrapping
+   * wrap('user');           // "`user`"
+   * wrap('users.email');    // "`users`.`email`"
+   * wrap('order');          // "`order`" (reserved word safely quoted)
+   * ```
    */
   protected wrap(value: string | any): string {
     // Handle array case - if it's an array that got passed by mistake
@@ -63,7 +121,41 @@ export default class MySQL extends Grammar {
   }
 
   /**
-   * Internal LIMIT compilation with OFFSET for MySQL
+   * Compile LIMIT and OFFSET clauses according to MySQL syntax requirements
+   *
+   * MySQL has specific requirements for LIMIT/OFFSET usage:
+   * - OFFSET cannot be used without LIMIT
+   * - When OFFSET is specified without LIMIT, LIMIT is set to maximum value
+   * - Both LIMIT and OFFSET must be non-negative integers
+   *
+   * ## MySQL Syntax
+   *
+   * - `LIMIT count` - Limit number of rows
+   * - `LIMIT offset, count` - Alternative syntax (deprecated)
+   * - `LIMIT count OFFSET offset` - Preferred syntax
+   *
+   * ## Maximum Values
+   *
+   * When only OFFSET is specified, LIMIT is set to MySQL's maximum value:
+   * 18446744073709551615 (2^64 - 1)
+   *
+   * @param query - Query object containing limit and offset values
+   * @returns MySQL-compatible LIMIT/OFFSET clause
+   *
+   * @example
+   * ```typescript
+   * // Only LIMIT
+   * query = { queries: { limits: { queries: [10] } } };
+   * // Returns: "LIMIT 10"
+   *
+   * // LIMIT with OFFSET
+   * query = { queries: { limits: { queries: [10] }, offset: { queries: [20] } } };
+   * // Returns: "LIMIT 10 OFFSET 20"
+   *
+   * // Only OFFSET (requires maximum LIMIT)
+   * query = { queries: { offset: { queries: [20] } } };
+   * // Returns: "LIMIT 18446744073709551615 OFFSET 20"
+   * ```
    */
   protected compileLimitInternal(query: any): string {
     let sql = "";
@@ -99,7 +191,41 @@ export default class MySQL extends Grammar {
   }
 
   /**
-   * Compile INSERT ON DUPLICATE KEY UPDATE for MySQL
+   * Compile INSERT ... ON DUPLICATE KEY UPDATE statement for MySQL upserts
+   *
+   * This MySQL-specific feature provides upsert functionality by inserting
+   * a record or updating it if a duplicate key conflict occurs.
+   *
+   * ## MySQL ON DUPLICATE KEY UPDATE
+   *
+   * - Triggered when a UNIQUE or PRIMARY KEY constraint is violated
+   * - Updates existing row instead of causing an error
+   * - Can reference inserted values using VALUES() function
+   * - Atomic operation ensuring data consistency
+   *
+   * ## Usage Patterns
+   *
+   * - **Full upsert**: Update all columns on conflict
+   * - **Selective update**: Only update specific columns on conflict
+   * - **Counter increment**: Increment counters on duplicate keys
+   *
+   * @param builder - Query builder instance with table information
+   * @param data - Object containing column-value pairs to insert
+   * @param updateData - Optional object specifying which columns to update on conflict
+   * @returns Complete INSERT ... ON DUPLICATE KEY UPDATE SQL statement
+   *
+   * @example
+   * ```typescript
+   * const data = { id: 1, name: 'John', views: 1 };
+   * const updateData = { views: true }; // Update views on conflict
+   *
+   * const sql = grammar.compileInsertOnDuplicateKeyUpdate(
+   *   { table: 'users' },
+   *   data,
+   *   updateData
+   * );
+   * // Returns: "INSERT INTO `users` (`id`, `name`, `views`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `views` = VALUES(`views`)"
+   * ```
    */
   compileInsertOnDuplicateKeyUpdate(
     builder: any,

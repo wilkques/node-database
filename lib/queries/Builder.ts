@@ -6,6 +6,8 @@
  */
 
 // Import JoinBuilder for type declarations
+// JoinBuilder is imported via type-only import to prevent circular dependency
+// while providing proper TypeScript spec compliance for three-layer architecture
 import type JoinBuilder from "./JoinBuilder.js";
 
 // Query storage structure interface
@@ -33,52 +35,13 @@ interface Methods {
 }
 
 // Where condition interface
-interface WhereCondition {
-  column: string;
-  operator?: string;
-  value?: any;
-  boolean?: "and" | "or";
-  type?: string;
-}
-
-// Join interface
-interface JoinClause {
-  table: string;
-  alias?: string;
-  type: "inner" | "left" | "right" | "cross" | "full" | "natural";
-  conditions: Array<{
-    first: string;
-    operator: string;
-    second: string;
-    boolean: "and" | "or";
-  }>;
-}
-
-// Order by interface
-interface OrderBy {
-  column: string;
-  direction: "asc" | "desc";
-}
 
 // Raw SQL interface
-interface RawExpression {
+export interface RawExpression {
   type: "raw";
   raw: true;
   value: string;
   bindings: any[];
-}
-
-// Case statement interface
-interface CaseStatement {
-  type: "case";
-  column?: string;
-  conditions: Array<{
-    when: any;
-    then: any;
-    bindings?: any[];
-  }>;
-  else?: any;
-  alias?: string;
 }
 
 // Query builder interface
@@ -196,6 +159,7 @@ export interface QueryBuilder {
   deleteWithJoin(): Promise<number>;
   raw(sql: string, bindings?: any[]): RawExpression;
   case(column?: string): CaseBuilder;
+  if(condition: any, trueValue: any, falseValue: any): RawExpression;
 }
 
 // Case builder interface
@@ -204,9 +168,6 @@ export interface CaseBuilder {
   else(value: any): this;
   end(alias?: string): RawExpression;
 }
-
-// JoinBuilder is imported via type-only import to prevent circular dependency
-// while providing proper TypeScript spec compliance for three-layer architecture
 
 export class Builder implements QueryBuilder {
   protected connection: any;
@@ -325,6 +286,56 @@ export class Builder implements QueryBuilder {
 
   /**
    * Add columns to SELECT clause
+   *
+   * Specifies which columns to retrieve from the database. Can be called multiple times
+   * to add more columns. Supports column aliasing, functions, and expressions.
+   *
+   * @param columns - Column names to select. If no columns specified, defaults to '*'
+   * @returns The Builder instance for method chaining
+   *
+   * @example Basic Column Selection
+   * ```typescript
+   * const users = await db.table('users')
+   *   .select('name', 'email', 'created_at')
+   *   .get();
+   * ```
+   *
+   * @example Column Aliases
+   * ```typescript
+   * const users = await db.table('users')
+   *   .select('name as full_name', 'email as user_email')
+   *   .get();
+   * ```
+   *
+   * @example Functions and Expressions
+   * ```typescript
+   * const stats = await db.table('users')
+   *   .select('COUNT(*) as total_users', 'MAX(created_at) as latest_user')
+   *   .first();
+   * ```
+   *
+   * @example Multiple Select Calls
+   * ```typescript
+   * const query = db.table('users')
+   *   .select('id', 'name')
+   *   .select('email')  // Adds to existing selection
+   *   .select('created_at');
+   * ```
+   *
+   * @example Conditional Expressions
+   * ```typescript
+   * const users = await db.table('users')
+   *   .select('name')
+   *   .select(db.if('age >= 18', 'Adult', 'Minor').as('age_group'))
+   *   .select(db.case('status')
+   *     .when('active', 'Active User')
+   *     .else('Inactive User')
+   *     .end('status_label')
+   *   )
+   *   .get();
+   * ```
+   *
+   * @since 1.0.0
    */
   select(...columns: string[]): this {
     if (columns.length === 0) {
@@ -413,7 +424,91 @@ export class Builder implements QueryBuilder {
   }
 
   /**
-   * Add WHERE condition
+   * Add WHERE condition to the query
+   *
+   * Adds a WHERE clause to filter query results. Supports multiple formats including
+   * simple comparisons, operator-based conditions, and nested subqueries. Multiple
+   * WHERE conditions are combined with AND logic by default.
+   *
+   * @param column - Column name, callback function for nested conditions, or condition object
+   * @param operator - Comparison operator ('=', '>', '<', '!=', 'LIKE', 'IN', etc.) or value if using default '=' operator
+   * @param value - Value to compare against (required when operator is specified)
+   * @returns The Builder instance for method chaining
+   *
+   * @example Simple Equality (two parameters)
+   * ```typescript
+   * // WHERE status = 'active'
+   * const users = await db.table('users')
+   *   .where('status', 'active')
+   *   .get();
+   * ```
+   *
+   * @example With Comparison Operators
+   * ```typescript
+   * // WHERE age > 18
+   * const adults = await db.table('users')
+   *   .where('age', '>', 18)
+   *   .get();
+   *
+   * // WHERE name LIKE '%john%'
+   * const johns = await db.table('users')
+   *   .where('name', 'LIKE', '%john%')
+   *   .get();
+   * ```
+   *
+   * @example Multiple Conditions (AND logic)
+   * ```typescript
+   * // WHERE status = 'active' AND age > 18
+   * const activeAdults = await db.table('users')
+   *   .where('status', 'active')
+   *   .where('age', '>', 18)
+   *   .get();
+   * ```
+   *
+   * @example Nested Conditions with Callbacks
+   * ```typescript
+   * // WHERE (status = 'active' OR status = 'pending') AND age > 18
+   * const users = await db.table('users')
+   *   .where(query => {
+   *     query.where('status', 'active')
+   *          .orWhere('status', 'pending');
+   *   })
+   *   .where('age', '>', 18)
+   *   .get();
+   * ```
+   *
+   * @example Complex Nested Logic
+   * ```typescript
+   * // WHERE ((role = 'admin' OR role = 'moderator') AND active = true) AND created_at > '2024-01-01'
+   * const staff = await db.table('users')
+   *   .where(query => {
+   *     query.where(subQuery => {
+   *       subQuery.where('role', 'admin')
+   *               .orWhere('role', 'moderator');
+   *     }).where('active', true);
+   *   })
+   *   .where('created_at', '>', '2024-01-01')
+   *   .get();
+   * ```
+   *
+   * @example Working with NULL Values
+   * ```typescript
+   * // Use whereNull/whereNotNull for NULL checks
+   * const usersWithEmail = await db.table('users')
+   *   .whereNotNull('email')
+   *   .get();
+   *
+   * const usersWithoutProfile = await db.table('users')
+   *   .whereNull('profile_id')
+   *   .get();
+   * ```
+   *
+   * @see {@link orWhere} for OR conditions
+   * @see {@link whereIn} for IN conditions
+   * @see {@link whereNull} for NULL checks
+   * @see {@link whereRaw} for raw SQL conditions
+   *
+   * @since 1.0.0
    */
   where(column: string | Function, operator?: any, value?: any): this {
     // Handle callback for subqueries
@@ -1380,6 +1475,19 @@ export class Builder implements QueryBuilder {
   }
 
   /**
+   * Create IF expression
+   *
+   * @param condition - Condition to evaluate (string, function, or Builder)
+   * @param trueValue - Value when condition is true
+   * @param falseValue - Value when condition is false
+   * @returns RawExpression for IF statement
+   */
+  // IF functionality uses RawExpression return type (no builder pattern needed)
+  if(condition: any, trueValue: any, falseValue: any): RawExpression {
+    return new IfBuilderImpl(() => this.newQuery()).buildIf(condition, trueValue, falseValue);
+  }
+
+  /**
    * Get query bindings
    */
   getBindings(): any[] {
@@ -1485,6 +1593,31 @@ export class Builder implements QueryBuilder {
 
   /**
    * Set table name (alias for from)
+   */
+  /**
+   * Set the table for the query
+   *
+   * Specifies which table the query should operate on. This is typically the first
+   * method called when building a query. Supports table aliasing for complex queries.
+   *
+   * @param name - Table name to query
+   * @param alias - Optional table alias for use in joins and complex queries
+   * @returns The Builder instance for method chaining
+   *
+   * @example Basic Table Selection
+   * ```typescript
+   * const users = await db.table('users').get();
+   * ```
+   *
+   * @example Table with Alias
+   * ```typescript
+   * const result = await db.table('users', 'u')
+   *   .join('profiles as p', 'u.id', 'p.user_id')
+   *   .select('u.name', 'p.bio')
+   *   .get();
+   * ```
+   *
+   * @since 1.0.0
    */
   table(name: string, alias?: string): this {
     return this.from(name, alias);
@@ -1844,32 +1977,24 @@ class CaseBuilderImpl implements CaseBuilder {
     condition: string;
     isSubquery: boolean;
   } {
-    try {
-      // Try to generate full SQL - if successful, it's a complete query
+    // Check if builder has FROM clause to determine if it's a complete query
+    if (builder.components?.from || (builder as any).queries?.froms?.queries?.length > 0) {
+      // Has FROM clause - generate full SQL as subquery
       const sql = builder.toSql();
-      if (sql && sql.includes("FROM")) {
-        // Complete query with FROM clause - treat as subquery
-        return { condition: `(${sql})`, isSubquery: true };
-      }
-    } catch (error) {
-      // If toSql() fails, it's likely just conditions without FROM
+      return { condition: `(${sql})`, isSubquery: true };
     }
 
     // Extract WHERE conditions for parameter binding
-    try {
-      const grammar = (builder as any).grammar;
-      if (!grammar) {
-        return { condition: "1=1", isSubquery: false };
-      }
+    const grammar = (builder as any).grammar;
+    if (!grammar) {
+      return { condition: "1=1", isSubquery: false };
+    }
 
-      const whereClause = grammar.compileWheres(builder);
-      if (whereClause && whereClause.startsWith("WHERE ")) {
-        return { condition: whereClause.substring(6), isSubquery: false }; // Remove "WHERE " prefix
-      } else if (whereClause) {
-        return { condition: whereClause, isSubquery: false };
-      }
-    } catch (error) {
-      // Fallback if grammar access fails
+    const whereClause = grammar.compileWheres(builder);
+    if (whereClause && whereClause.startsWith("WHERE ")) {
+      return { condition: whereClause.substring(6), isSubquery: false }; // Remove "WHERE " prefix
+    } else if (whereClause) {
+      return { condition: whereClause, isSubquery: false };
     }
 
     return { condition: "1=1", isSubquery: false };
@@ -1951,6 +2076,135 @@ class CaseBuilderImpl implements CaseBuilder {
       value: sql,
       bindings,
     };
+  }
+}
+
+/**
+ * IF expression builder implementation (internal utility class)
+ * Generates IF(condition, true_value, false_value) SQL expressions
+ * Supports multiple condition types: strings, functions, and subqueries
+ *
+ * Note: Unlike CaseBuilder, IF doesn't use builder pattern (single method call)
+ * so no public interface is needed - this is an internal implementation detail
+ */
+class IfBuilderImpl {
+  private newQueryFn?: () => Builder;
+
+  constructor(newQueryFn?: () => Builder) {
+    this.newQueryFn = newQueryFn;
+  }
+
+  /**
+   * Build IF expression with condition evaluation
+   *
+   * @param condition - Condition to evaluate (string, function, or value)
+   * @param trueValue - Value when condition is true
+   * @param falseValue - Value when condition is false
+   * @returns RawExpression for the IF statement
+   */
+  buildIf(condition: any, trueValue: any, falseValue: any): RawExpression {
+    const bindings: any[] = [];
+    let conditionSql: string;
+
+    // Handle different condition types
+    if (typeof condition === "function") {
+      // Function-based condition: IF(EXISTS(SELECT...) OR WHERE conditions, true, false)
+      const subBuilder = this.newQueryFn ? this.newQueryFn() : new Builder(null);
+      condition(subBuilder);
+
+      const { conditionExpression, isSubquery } = this.extractConditionOrSubquery(subBuilder);
+      conditionSql = conditionExpression;
+      bindings.push(...subBuilder.getBindings());
+    } else if (condition && typeof condition === "object" && condition.raw) {
+      // Raw expression condition
+      conditionSql = condition.value;
+      if (condition.bindings) {
+        bindings.push(...condition.bindings);
+      }
+    } else if (condition === undefined || condition === null) {
+      // Handle undefined/null conditions
+      conditionSql = condition === null ? "NULL" : "undefined";
+    } else {
+      // Simple condition (string or value)
+      conditionSql = condition.toString();
+    }
+
+    // Handle true value
+    if (trueValue && typeof trueValue === "object" && trueValue.raw) {
+      // Raw expression for true value
+      bindings.push(...(trueValue.bindings || []));
+    } else {
+      // Regular value for true
+      bindings.push(trueValue);
+    }
+
+    // Handle false value
+    if (falseValue && typeof falseValue === "object" && falseValue.raw) {
+      // Raw expression for false value
+      bindings.push(...(falseValue.bindings || []));
+    } else {
+      // Regular value for false
+      bindings.push(falseValue);
+    }
+
+    // Generate IF SQL
+    const trueSql = (trueValue && trueValue.raw) ? trueValue.value : "?";
+    const falseSql = (falseValue && falseValue.raw) ? falseValue.value : "?";
+    const sql = `IF(${conditionSql}, ${trueSql}, ${falseSql})`;
+
+    return {
+      type: "raw",
+      raw: true,
+      value: sql,
+      bindings,
+    };
+  }
+
+  /**
+   * Extract condition or subquery from builder for IF syntax
+   * Similar to CaseBuilder but adapted for IF conditions
+   */
+  private extractConditionOrSubquery(builder: Builder): {
+    conditionExpression: string;
+    isSubquery: boolean;
+  } {
+    // Check if builder has FROM clause to determine if it's a complete query
+    if (builder.components?.from || (builder as any).queries?.froms?.queries?.length > 0) {
+      // Has FROM clause - generate full SQL as EXISTS subquery
+      const sql = builder.toSql();
+      return { conditionExpression: `EXISTS(${sql})`, isSubquery: true };
+    }
+
+    // Extract WHERE conditions for direct condition
+    try {
+      const grammar = (builder as any).grammar;
+      if (!grammar) {
+        return { conditionExpression: "TRUE", isSubquery: false };
+      }
+
+      const whereClause = grammar.compileWheres(builder);
+      if (whereClause && whereClause.startsWith("WHERE ")) {
+        let condition = whereClause.substring(6); // Remove "WHERE " prefix
+
+        // Add parentheses around complex conditions (containing OR, AND)
+        if (condition.includes(" OR ") || (condition.includes(" AND ") && condition.includes(" OR "))) {
+          condition = `(${condition})`;
+        }
+
+        return { conditionExpression: condition, isSubquery: false };
+      } else if (whereClause) {
+        // Add parentheses around complex conditions
+        let condition = whereClause;
+        if (condition.includes(" OR ") || (condition.includes(" AND ") && condition.includes(" OR "))) {
+          condition = `(${condition})`;
+        }
+        return { conditionExpression: condition, isSubquery: false };
+      }
+    } catch (error) {
+      // Fallback if grammar access fails
+    }
+
+    return { conditionExpression: "TRUE", isSubquery: false };
   }
 }
 

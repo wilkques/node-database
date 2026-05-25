@@ -5,7 +5,7 @@
  * Part of three-layer architecture: Builder (API) -> JoinBuilder (Business) -> Grammar (SQL)
  */
 
-import { Builder } from "./Builder.js";
+import { Builder, type RawExpression } from "./Builder.js";
 
 // Export Builder type for improved TypeScript compatibility
 export type { Builder } from "./Builder.js";
@@ -14,13 +14,6 @@ export type { Builder } from "./Builder.js";
 type JoinType = "inner" | "left" | "right" | "full" | "cross";
 type DatabaseConnection = any; // TODO: Replace with proper connection interface
 type TableReference = string | Builder | RawExpression;
-
-interface RawExpression {
-  type: "raw";
-  raw: true;
-  value: string;
-  bindings: any[];
-}
 
 export interface JoinCondition {
   type: "basic" | "complex";

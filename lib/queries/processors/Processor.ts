@@ -1,20 +1,134 @@
 /**
- * Processor - Query Result Processor
+ * Processor - Universal Query Result Processor
  *
- * Processes raw database results into standardized format
+ * Standardizes and processes raw database results from different drivers into
+ * a consistent format. Handles the varying result structures returned by
+ * MySQL, PostgreSQL, SQLite, and other database drivers.
+ *
+ * ## Architecture
+ *
+ * The Processor follows a normalization approach where:
+ * - Raw results from different drivers are converted to standard formats
+ * - Type conversion is applied based on database-specific metadata
+ * - Error handling provides meaningful feedback for processing failures
+ * - Extensible design allows database-specific processors to override behaviors
+ *
+ * ## Result Normalization
+ *
+ * Different database drivers return results in various formats:
+ * - **MySQL**: `{ rows: [], fields: [], insertId, affectedRows }`
+ * - **PostgreSQL**: `{ rows: [], rowCount, fields }`
+ * - **SQLite**: `rows[] with changes, lastInsertRowid`
+ *
+ * The Processor normalizes these into consistent structures.
+ *
+ * ## Type Processing
+ *
+ * - **Boolean conversion**: Handles different boolean representations (0/1, true/false)
+ * - **Date/time handling**: Converts database dates to JavaScript Date objects
+ * - **JSON processing**: Parses JSON columns into JavaScript objects
+ * - **Numeric conversion**: Proper handling of integers, floats, and BigInt
+ *
+ * ## Database Compatibility
+ *
+ * Supports all major databases through driver-specific implementations:
+ * - MySQL (mysql2)
+ * - PostgreSQL (pg)
+ * - SQLite (better-sqlite3)
+ *
+ * @since 1.0.0
  */
 
+/**
+ * Interface defining core result processing methods for database operations.
+ *
+ * Ensures consistency across different database-specific processor implementations
+ * while allowing for database-specific optimizations and type handling.
+ */
 export interface ProcessorInterface {
+  /**
+   * Process SELECT query results into standardized array format
+   *
+   * @param results - Raw results from database driver
+   * @returns Array of result objects
+   */
   processSelectResults(results: any): any[];
+
+  /**
+   * Process INSERT query results and extract insertion metadata
+   *
+   * @param results - Raw results from database driver
+   * @param sequence - Optional sequence name for PostgreSQL
+   * @returns Object containing insertId and affectedRows
+   */
   processInsertResults(results: any, sequence?: string): any;
+
+  /**
+   * Process UPDATE query results and return affected row count
+   *
+   * @param results - Raw results from database driver
+   * @returns Number of rows updated
+   */
   processUpdateResults(results: any): number;
+
+  /**
+   * Process DELETE query results and return affected row count
+   *
+   * @param results - Raw results from database driver
+   * @returns Number of rows deleted
+   */
   processDeleteResults(results: any): number;
+
+  /**
+   * Process column listing results into string array
+   *
+   * @param results - Raw column metadata from database
+   * @returns Array of column names
+   */
   processColumnListing(results: any): string[];
 }
 
 export default class Processor implements ProcessorInterface {
   /**
-   * Process SELECT query results
+   * Process SELECT query results into standardized array format
+   *
+   * Normalizes the varying result formats from different database drivers
+   * into a consistent array of objects. Handles edge cases and ensures
+   * reliable data access across all supported databases.
+   *
+   * ## Driver Result Formats
+   *
+   * - **MySQL**: Direct array or `{ rows: [] }`
+   * - **PostgreSQL**: `{ rows: [], rowCount, fields }`
+   * - **SQLite**: Direct array or `{ rows: [] }`
+   * - **Other**: `{ recordset: [] }` (SQL Server style)
+   *
+   * ## Return Format
+   *
+   * Always returns an array of objects, where each object represents a row:
+   * ```javascript
+   * [
+   *   { id: 1, name: 'John', email: 'john@example.com' },
+   *   { id: 2, name: 'Jane', email: 'jane@example.com' }
+   * ]
+   * ```
+   *
+   * @param results - Raw results from database driver
+   * @returns Standardized array of result objects (empty array if no results)
+   *
+   * @example
+   * ```typescript
+   * // MySQL result
+   * const mysqlResult = [{ id: 1, name: 'John' }];
+   * processor.processSelectResults(mysqlResult); // [{ id: 1, name: 'John' }]
+   *
+   * // PostgreSQL result
+   * const pgResult = { rows: [{ id: 1, name: 'John' }], rowCount: 1 };
+   * processor.processSelectResults(pgResult); // [{ id: 1, name: 'John' }]
+   *
+   * // Empty result
+   * processor.processSelectResults(null); // []
+   * ```
    */
   processSelectResults(results: any): any[] {
     if (!results) return [];
@@ -36,7 +150,53 @@ export default class Processor implements ProcessorInterface {
   }
 
   /**
-   * Process INSERT query results
+   * Process INSERT query results and extract insertion metadata
+   *
+   * Normalizes INSERT result formats from different database drivers and
+   * extracts key information like the auto-generated ID and affected row count.
+   *
+   * ## Database-Specific Handling
+   *
+   * - **MySQL**: Uses `insertId` and `affectedRows` from result
+   * - **PostgreSQL**: Extracts ID from `rows[0][sequence]` with `rowCount`
+   * - **SQLite**: Uses `lastInsertRowid` and `changes` properties
+   *
+   * ## Return Format
+   *
+   * ```javascript
+   * {
+   *   insertId: 123,        // Auto-generated primary key (null if not applicable)
+   *   affectedRows: 1       // Number of rows inserted
+   * }
+   * ```
+   *
+   * ## Auto-Increment Handling
+   *
+   * - For PostgreSQL, specify the sequence name to extract the correct ID
+   * - MySQL auto-increment IDs are automatically detected
+   * - SQLite ROWID is used when no explicit primary key exists
+   *
+   * @param results - Raw INSERT results from database driver
+   * @param sequence - PostgreSQL sequence name (defaults to 'id')
+   * @returns Object with insertId and affectedRows, or null if no results
+   *
+   * @example
+   * ```typescript
+   * // MySQL result
+   * const mysqlResult = { insertId: 123, affectedRows: 1 };
+   * processor.processInsertResults(mysqlResult);
+   * // Returns: { insertId: 123, affectedRows: 1 }
+   *
+   * // PostgreSQL result
+   * const pgResult = { rows: [{ id: 456 }], rowCount: 1 };
+   * processor.processInsertResults(pgResult, 'id');
+   * // Returns: { insertId: 456, affectedRows: 1 }
+   *
+   * // SQLite result
+   * const sqliteResult = { lastInsertRowid: 789, changes: 1 };
+   * processor.processInsertResults(sqliteResult);
+   * // Returns: { insertId: 789, affectedRows: 1 }
+   * ```
    */
   processInsertResults(results: any, sequence?: string): any {
     if (!results) return null;
@@ -156,7 +316,38 @@ export default class Processor implements ProcessorInterface {
   }
 
   /**
-   * Convert values to appropriate database format
+   * Convert JavaScript values to appropriate database storage format
+   *
+   * Transforms JavaScript data types into formats that can be safely stored
+   * in the database. Handles type conversion for common data types and
+   * special cases like Date objects and complex objects.
+   *
+   * ## Conversion Rules
+   *
+   * - **null/undefined**: Converted to SQL NULL
+   * - **Boolean**: Converted to 1 (true) or 0 (false) for compatibility
+   * - **Date objects**: Converted to ISO 8601 string format
+   * - **Objects/Arrays**: JSON stringified for storage
+   * - **Primitives**: Passed through unchanged
+   *
+   * ## Database Compatibility
+   *
+   * These conversions work across all supported databases, though
+   * database-specific processors may override this behavior for
+   * optimized native type handling.
+   *
+   * @param value - JavaScript value to convert
+   * @returns Database-compatible value
+   *
+   * @example
+   * ```typescript
+   * processor.convertValue(true);           // 1
+   * processor.convertValue(false);          // 0
+   * processor.convertValue(new Date());     // "2024-01-01T12:00:00.000Z"
+   * processor.convertValue({ key: 'val' }); // '{"key":"val"}'
+   * processor.convertValue(null);           // null
+   * processor.convertValue('string');       // "string"
+   * ```
    */
   convertValue(value: any): any {
     if (value === null || value === undefined) {
@@ -300,46 +491,42 @@ export default class Processor implements ProcessorInterface {
       throw new Error("No database connection available");
     }
 
-    try {
-      // If builder has insert method, use it
-      if (builder.insert && typeof builder.insert === "function") {
-        const insertResult = await builder.insert(data);
+    // If builder has insert method, use it
+    if (builder.insert && typeof builder.insert === "function") {
+      const insertResult = await builder.insert(data);
 
-        if (insertResult && insertResult.insertId) {
-          return parseInt(insertResult.insertId) || 0;
-        }
+      if (insertResult && insertResult.insertId) {
+        return parseInt(insertResult.insertId) || 0;
       }
-
-      // For databases that don't return insertId directly but have getLastInsertId
-      // Check both connection and getConnection() patterns
-      let connection = builder.connection;
-      if (
-        !connection &&
-        builder.getConnection &&
-        typeof builder.getConnection === "function"
-      ) {
-        connection = builder.getConnection();
-      }
-
-      if (connection && connection.getLastInsertId) {
-        const lastIdResult = await connection.getLastInsertId(sequence);
-        return parseInt(lastIdResult) || 0;
-      }
-
-      // If this is a mock builder with expected return values
-      if (builder._mockInsertId !== undefined) {
-        return builder._mockInsertId;
-      }
-
-      // For the error case test - if no connection available and insert didn't return an ID
-      if (!connection) {
-        throw new Error("No database connection available");
-      }
-
-      return 0;
-    } catch (error) {
-      throw error;
     }
+
+    // For databases that don't return insertId directly but have getLastInsertId
+    // Check both connection and getConnection() patterns
+    let connection = builder.connection;
+    if (
+      !connection &&
+      builder.getConnection &&
+      typeof builder.getConnection === "function"
+    ) {
+      connection = builder.getConnection();
+    }
+
+    if (connection && connection.getLastInsertId) {
+      const lastIdResult = await connection.getLastInsertId(sequence);
+      return parseInt(lastIdResult) || 0;
+    }
+
+    // If this is a mock builder with expected return values
+    if (builder._mockInsertId !== undefined) {
+      return builder._mockInsertId;
+    }
+
+    // For the error case test - if no connection available and insert didn't return an ID
+    if (!connection) {
+      throw new Error("No database connection available");
+    }
+
+    return 0;
   }
 
   /**

@@ -1,12 +1,90 @@
 /**
- * SQLite Grammar - SQLite-specific SQL compilation
+ * SQLite Grammar - SQLite-specific SQL compilation and optimization
+ *
+ * Extends the base Grammar class to provide SQLite-specific SQL generation,
+ * including proper identifier quoting, LIMIT/OFFSET handling, and SQLite's
+ * unique features and limitations.
+ *
+ * ## SQLite-Specific Features
+ *
+ * - **Square Bracket Identifiers**: Uses square brackets for table/column quoting
+ * - **ROWID Support**: Automatic ROWID handling for auto-increment
+ * - **Simple Type System**: Dynamic typing with affinity rules
+ * - **PRAGMA Commands**: Support for SQLite configuration commands
+ * - **Attach/Detach**: Multiple database file support
+ * - **Full-Text Search**: FTS3/FTS4/FTS5 search capabilities
+ * - **JSON Support**: JSON1 extension functions
+ *
+ * ## Identifier Quoting
+ *
+ * SQLite supports multiple quoting styles, but this grammar uses square brackets:
+ * - Table names: `[users]`
+ * - Column names: `[email]`
+ * - Aliases: `[users] AS [u]`
+ *
+ * ## Type Affinity
+ *
+ * SQLite uses dynamic typing with type affinity:
+ * - TEXT: String values
+ * - NUMERIC: Numeric values (integer or real)
+ * - INTEGER: Integer values (including ROWID)
+ * - REAL: Floating-point values
+ * - BLOB: Binary data
+ *
+ * ## LIMIT/OFFSET Behavior
+ *
+ * SQLite requires LIMIT when using OFFSET. If only OFFSET is specified,
+ * LIMIT is set to -1 (unlimited) per SQLite convention.
+ *
+ * ## Compatibility
+ *
+ * Supports SQLite 3.x with full feature compatibility.
+ * Tested with better-sqlite3 driver for optimal performance.
+ *
+ * @since 1.0.0
  */
 
 import Grammar from "./Grammar.js";
 
 export default class SQLite extends Grammar {
   /**
-   * Wrap column/table identifier for SQLite
+   * Wrap column/table identifier using SQLite square bracket syntax
+   *
+   * SQLite supports multiple identifier quoting styles (backticks, double quotes,
+   * square brackets), but this grammar uses square brackets for consistency
+   * and compatibility with all SQLite versions.
+   *
+   * ## SQLite Identifier Rules
+   *
+   * - Square brackets allow reserved words as identifiers
+   * - Case sensitivity depends on PRAGMA case_sensitive_like setting
+   * - Special characters and spaces are supported within brackets
+   * - Maximum identifier length is not explicitly limited
+   * - Unicode characters are fully supported
+   *
+   * ## Quoting Styles Supported by SQLite
+   *
+   * - Square brackets: `[table]` (used by this grammar)
+   * - Double quotes: `"table"` (SQL standard)
+   * - Backticks: `` `table` `` (MySQL compatibility)
+   * - Single quotes: `'table'` (non-standard, not recommended)
+   *
+   * ## ROWID Considerations
+   *
+   * SQLite tables have an implicit ROWID column unless created with WITHOUT ROWID.
+   * Identifier wrapping ensures proper handling of explicit vs implicit columns.
+   *
+   * @param value - Identifier to wrap with SQLite square brackets
+   * @returns Identifier wrapped with SQLite square bracket syntax
+   *
+   * @example
+   * ```typescript
+   * // SQLite-specific wrapping
+   * wrap('user');           // '[user]'
+   * wrap('users.email');    // '[users].[email]'
+   * wrap('order');          // '[order]' (reserved word safely quoted)
+   * wrap('table name');     // '[table name]' (spaces allowed)
+   * ```
    */
   protected wrap(value: string | any): string {
     // Handle array case - if it's an array that got passed by mistake

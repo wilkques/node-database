@@ -4,6 +4,7 @@
 
 import mysql from "mysql2/promise";
 import Connection, { ConnectionConfig, QueryResult } from "../Connection.js";
+import { QueryError, DatabaseErrorFactory } from "../../errors/DatabaseError.js";
 
 interface MySQLConfig extends ConnectionConfig {
   connectionLimit?: number;
@@ -97,7 +98,15 @@ export default class MySqlDriver extends Connection {
         insertId: (results as any).insertId,
       };
     } catch (error: any) {
-      throw new Error(`MySQL query failed: ${error.message}`);
+      throw new QueryError(
+        `MySQL query failed: ${error.message}`,
+        {
+          driver: 'mysql',
+          sql,
+          bindings,
+          originalError: error
+        }
+      );
     }
   }
 

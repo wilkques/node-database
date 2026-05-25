@@ -1,5 +1,43 @@
 /**
- * MySQLProcessor - MySQL-specific result processing
+ * MySQLProcessor - MySQL-specific result processing and type conversion
+ *
+ * Extends the base Processor class to handle MySQL-specific data types,
+ * result formats, and optimizations. Provides native support for MySQL's
+ * unique type system and result structures.
+ *
+ * ## MySQL-Specific Features
+ *
+ * - **BIGINT Handling**: Converts BigInt values to regular numbers
+ * - **TINYINT(1) Boolean**: Treats TINYINT(1) as boolean type
+ * - **DateTime Formatting**: MySQL-specific date/time string formatting
+ * - **JSON Type Support**: Native MySQL JSON column processing
+ * - **Field Metadata**: Enhanced field type detection and conversion
+ *
+ * ## Type Conversion Optimizations
+ *
+ * - Boolean values stored as TINYINT(1) are properly converted
+ * - Date objects formatted for MySQL DATETIME columns
+ * - BigInt values converted to numbers for JavaScript compatibility
+ * - JSON columns automatically parsed from string format
+ *
+ * ## Result Structure
+ *
+ * MySQL (mysql2) returns results in this format:
+ * ```javascript
+ * {
+ *   insertId: number,        // Auto-increment ID
+ *   affectedRows: number,    // Rows affected
+ *   changedRows: number,     // Rows actually changed (UPDATE)
+ *   fields: FieldPacket[]    // Column metadata
+ * }
+ * ```
+ *
+ * ## Compatibility
+ *
+ * Optimized for mysql2 driver with MySQL 5.7+ servers.
+ * Handles both connection and pool-based operations.
+ *
+ * @since 1.0.0
  */
 
 import Processor from "./Processor.js";

@@ -4,7 +4,7 @@
 
 ![Node.js](https://img.shields.io/badge/Node.js-v16+-green.svg)
 ![Databases](https://img.shields.io/badge/MySQL%20%7C%20PostgreSQL%20%7C%20SQLite-blue.svg)
-![Tests](https://img.shields.io/badge/Tests-156%20Passed-brightgreen.svg)
+![Tests](https://img.shields.io/badge/Tests-252%20Passed-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 **Modern Node.js Database Query Builder**  
@@ -36,7 +36,7 @@ A powerful, type-safe Node.js database query builder with fluent API and complet
 - **🔍 Complex Queries** - SELECT, WHERE, ORDER BY, GROUP BY, HAVING
 - **🔗 JOIN Operations** - INNER, LEFT, RIGHT, CROSS JOIN and subqueries
 - **📊 Aggregate Functions** - COUNT, SUM, AVG, MAX, MIN
-- **🎛️ Conditional Expressions** - Complete CASE WHEN support
+- **🎛️ Conditional Expressions** - Complete CASE WHEN and IF-ELSE support
 - **🔄 Transaction Handling** - Complete transaction support and rollback mechanism
 
 ### 🛠️ Advanced Features
@@ -142,7 +142,7 @@ const userPosts = await db
   .get();
 ```
 
-### Conditional Expressions (CASE WHEN)
+### Conditional Expressions (CASE WHEN & IF-ELSE)
 
 ```javascript
 // Simple CASE statement
@@ -185,6 +185,76 @@ await db.table("products").update({
     .else("In Stock")
     .end(),
 });
+```
+
+### IF-ELSE Expressions
+
+```javascript
+// Simple IF expression
+const users = await db
+  .table("users")
+  .select(
+    "name",
+    "email",
+    db.if("status = 'active'", "Active User", "Inactive User").as("user_status"),
+  )
+  .get();
+
+// Function-based IF conditions
+const products = await db
+  .table("products")
+  .select(
+    "name",
+    "price",
+    db.if(
+      (q) => q.where("inventory", ">", 0),
+      "In Stock",
+      "Out of Stock"
+    ).as("availability"),
+  )
+  .get();
+
+// Nested IF expressions
+const orders = await db
+  .table("orders")
+  .select(
+    "id",
+    "total",
+    db.if(
+      "status = 'completed'",
+      db.if("total > 100", "High Value", "Normal"),
+      "Pending"
+    ).as("order_category"),
+  )
+  .get();
+
+// IF with subqueries
+const userStats = await db
+  .table("users")
+  .select(
+    "name",
+    db.if(
+      db.table("posts").count().whereRaw("posts.author_id = users.id"),
+      "Has Posts",
+      "No Posts"
+    ).as("post_status"),
+  )
+  .get();
+
+// Using IF in UPDATE
+await db.table("products").update({
+  status: db.if("inventory > 0", "available", "unavailable"),
+  discount: db.if("price > 100", "10%", "0%"),
+});
+
+// IF in WHERE clauses
+const filteredUsers = await db
+  .table("users")
+  .where(
+    db.if("age >= 18", "status", "'minor'"),
+    "active"
+  )
+  .get();
 ```
 
 ### Data Modification
@@ -270,6 +340,7 @@ try {
 - **[Quick Start Guide](docs/examples/quick-start.md)** - Complete getting started tutorial
 - **[Basic Queries](docs/examples/basic-queries.md)** - SELECT queries explained
 - **[JOIN Operations](docs/examples/joins.md)** - Complete guide to table joins
+- **[Conditional Expressions](docs/examples/conditional-expressions.md)** - CASE WHEN and IF-ELSE usage
 - **[Data Modification](docs/examples/data-modification.md)** - CRUD operations explained
 - **[Transaction Handling](docs/examples/transactions.md)** - Transaction management and data consistency
 - **[Query Logging](docs/examples/query-logging.md)** - Debugging and performance monitoring
@@ -354,6 +425,40 @@ const activeUsers = await db
       .whereRaw("posts.author_id = users.id")
       .where("posts.status", "published");
   })
+  .get();
+
+// Complex conditional queries with IF
+const userAnalytics = await db
+  .table("users")
+  .select(
+    "id",
+    "name",
+    db.if(
+      db.table("orders").count().whereRaw("orders.user_id = users.id"),
+      "Customer",
+      "Prospect"
+    ).as("customer_type"),
+    db.if(
+      (q) => q.whereRaw("created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"),
+      "New",
+      "Existing"
+    ).as("user_age"),
+  )
+  .get();
+
+// Dynamic column selection with IF
+const reportData = await db
+  .table("products")
+  .select(
+    "name",
+    "price",
+    db.if("category = 'electronics'", "price * 0.9", "price").as("final_price"),
+    db.if(
+      db.raw("inventory > (SELECT AVG(inventory) FROM products)"),
+      "High Stock",
+      "Low Stock"
+    ).as("stock_level"),
+  )
   .get();
 ```
 

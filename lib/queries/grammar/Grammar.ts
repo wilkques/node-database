@@ -1,13 +1,93 @@
 /**
  * Grammar - Base SQL grammar class for query compilation
+ *
+ * This is the foundation class for database-specific SQL compilation.
+ * It provides a unified interface for converting query builder objects
+ * into SQL strings that can be executed against various databases.
+ *
+ * ## Architecture
+ *
+ * The Grammar class follows a component-based compilation approach where:
+ * - Each SQL clause (SELECT, FROM, WHERE, etc.) has its own compilation method
+ * - Query objects are normalized into a consistent structure before compilation
+ * - Database-specific implementations override methods for custom behavior
+ *
+ * ## Query Structure
+ *
+ * Query objects are expected to have a `queries` structure:
+ * ```typescript
+ * {
+ *   queries: {
+ *     columns: { queries: string[] },    // SELECT columns
+ *     froms: { queries: string[] },      // FROM tables
+ *     joins: { queries: object[] },      // JOIN clauses
+ *     wheres: { queries: object[] },     // WHERE conditions
+ *     groups: { queries: string[] },     // GROUP BY columns
+ *     havings: { queries: object[] },    // HAVING conditions
+ *     orders: { queries: object[] },     // ORDER BY clauses
+ *     limits: { queries: number[] },     // LIMIT values
+ *     offset: { queries: number[] }      // OFFSET values
+ *   }
+ * }
+ * ```
+ *
+ * ## Parameter Binding
+ *
+ * All user values are safely parameterized using `?` placeholders to prevent
+ * SQL injection. The actual parameter binding is handled by the database driver.
+ *
+ * ## Identifier Wrapping
+ *
+ * Table and column names are wrapped with backticks (`) by default.
+ * Database-specific grammars override this for their preferred syntax:
+ * - MySQL: backticks `table`
+ * - PostgreSQL: double quotes "table"
+ * - SQLite: square brackets [table]
+ *
+ * @since 1.0.0
  */
 
 import type { QueryBuilder } from "../Builder.js";
 
+/**
+ * Interface defining the core compilation methods required by all grammar implementations.
+ *
+ * This interface ensures consistency across different database grammars while allowing
+ * for database-specific optimizations and syntax variations.
+ */
 export interface GrammarInterface {
+  /**
+   * Compile a SELECT query into SQL
+   *
+   * @param query - Query object with component structure
+   * @returns Complete SELECT SQL statement
+   */
   compileSelect(query: any): string;
+
+  /**
+   * Compile an INSERT query into SQL
+   *
+   * @param query - Query object with table information
+   * @param data - Array of objects containing column-value pairs to insert
+   * @returns Complete INSERT SQL statement with parameter placeholders
+   */
   compileInsert(query: any, data: object[]): string;
+
+  /**
+   * Compile an UPDATE query into SQL
+   *
+   * @param query - Query object with table and WHERE conditions
+   * @param data - Object containing column-value pairs to update
+   * @returns Complete UPDATE SQL statement with parameter placeholders
+   */
   compileUpdate(query: any, data: object): string;
+
+  /**
+   * Compile a DELETE query into SQL
+   *
+   * @param query - Query object with table and WHERE conditions
+   * @returns Complete DELETE SQL statement with parameter placeholders
+   */
   compileDelete(query: any): string;
 }
 
@@ -26,7 +106,46 @@ export default class Grammar implements GrammarInterface {
   ];
 
   /**
-   * Compile a SELECT statement
+   * Compile a SELECT statement from query components
+   *
+   * This method processes a query object and generates a complete SELECT SQL statement
+   * by compiling each component (columns, FROM, JOINs, WHERE, etc.) in the correct order.
+   *
+   * ## Query Processing
+   *
+   * 1. **Normalization**: Converts component-based query structure to queries structure
+   * 2. **Component Compilation**: Processes each SELECT component in order
+   * 3. **SQL Assembly**: Combines compiled components into final SQL string
+   *
+   * ## Component Order
+   *
+   * Components are compiled in this order to ensure valid SQL:
+   * - columns (SELECT)
+   * - from (FROM)
+   * - joins (JOIN clauses)
+   * - wheres (WHERE conditions)
+   * - groups (GROUP BY)
+   * - havings (HAVING)
+   * - orders (ORDER BY)
+   * - limit (LIMIT)
+   * - offset (OFFSET)
+   *
+   * @param query - Query object containing either components or queries structure
+   * @returns Complete SELECT SQL statement
+   *
+   * @example
+   * ```typescript
+   * const query = {
+   *   components: {
+   *     columns: ['id', 'name'],
+   *     from: 'users',
+   *     wheres: [{ type: 'basic', column: 'active', operator: '=', value: true }]
+   *   }
+   * };
+   *
+   * const sql = grammar.compileSelect(query);
+   * // Returns: "SELECT `id`, `name` FROM `users` WHERE `active` = ?"
+   * ```
    */
   compileSelect(query: any): string {
     let actualQuery = query;
@@ -90,7 +209,36 @@ export default class Grammar implements GrammarInterface {
   }
 
   /**
-   * Compile INSERT statement
+   * Compile INSERT statement with parameter placeholders
+   *
+   * Generates an INSERT SQL statement for inserting one or more records.
+   * All values are parameterized using `?` placeholders for security.
+   *
+   * ## Parameter Binding
+   *
+   * - Column names are extracted from the first data object
+   * - Values are replaced with `?` placeholders
+   * - Actual values are bound by the database driver during execution
+   *
+   * ## Batch Inserts
+   *
+   * Multiple records are supported by generating multiple value groups:
+   * `VALUES (?, ?), (?, ?), (?, ?)`
+   *
+   * @param query - Query object containing table information
+   * @param data - Array of objects with column-value pairs to insert
+   * @returns INSERT SQL with parameter placeholders
+   *
+   * @example
+   * ```typescript
+   * const data = [
+   *   { name: 'John', email: 'john@example.com' },
+   *   { name: 'Jane', email: 'jane@example.com' }
+   * ];
+   *
+   * const sql = grammar.compileInsert({ table: 'users' }, data);
+   * // Returns: "INSERT INTO `users` (`name`, `email`) VALUES (?, ?), (?, ?)"
+   * ```
    */
   compileInsert(query: any, data: object[]): string {
     const table = this.wrapTable(query.from || query.table);
@@ -105,7 +253,42 @@ export default class Grammar implements GrammarInterface {
   }
 
   /**
-   * Compile UPDATE statement
+   * Compile UPDATE statement with WHERE conditions and parameter placeholders
+   *
+   * Generates an UPDATE SQL statement with SET clauses and optional WHERE conditions.
+   * Supports both parameterized values and raw SQL expressions.
+   *
+   * ## Value Types
+   *
+   * - **Parameterized values**: Regular values are replaced with `?` placeholders
+   * - **Raw expressions**: Objects with `{ raw: true, value: string }` are inserted directly
+   *
+   * ## WHERE Conditions
+   *
+   * If the query contains WHERE conditions, they are automatically included
+   * to ensure updates only affect intended records.
+   *
+   * @param query - Query object containing table and WHERE conditions
+   * @param data - Object with column-value pairs to update
+   * @returns UPDATE SQL with parameter placeholders and WHERE clause
+   *
+   * @example
+   * ```typescript
+   * const query = {
+   *   table: 'users',
+   *   queries: {
+   *     wheres: { queries: [{ type: 'basic', column: 'id', operator: '=', value: 1 }] }
+   *   }
+   * };
+   *
+   * const data = {
+   *   name: 'John Updated',
+   *   updated_at: { raw: true, value: 'NOW()' }
+   * };
+   *
+   * const sql = grammar.compileUpdate(query, data);
+   * // Returns: "UPDATE `users` SET `name` = ?, `updated_at` = NOW() WHERE `id` = ?"
+   * ```
    */
   compileUpdate(query: any, data: object): string {
     const table = this.wrapTable(query.from || query.table);
@@ -129,7 +312,35 @@ export default class Grammar implements GrammarInterface {
   }
 
   /**
-   * Compile DELETE statement
+   * Compile DELETE statement with WHERE conditions
+   *
+   * Generates a DELETE SQL statement with optional WHERE conditions.
+   * WHERE conditions are strongly recommended to avoid accidental data loss.
+   *
+   * ## Safety Considerations
+   *
+   * - DELETE without WHERE conditions will remove ALL records from the table
+   * - The query object should contain WHERE conditions for safe deletion
+   * - Use transactions for critical delete operations
+   *
+   * @param query - Query object containing table and WHERE conditions
+   * @returns DELETE SQL with WHERE clause and parameter placeholders
+   *
+   * @example
+   * ```typescript
+   * const query = {
+   *   table: 'users',
+   *   queries: {
+   *     wheres: { queries: [
+   *       { type: 'basic', column: 'active', operator: '=', value: false },
+   *       { type: 'basic', column: 'last_login', operator: '<', value: '2023-01-01' }
+   *     ]}
+   *   }
+   * };
+   *
+   * const sql = grammar.compileDelete(query);
+   * // Returns: "DELETE FROM `users` WHERE `active` = ? AND `last_login` < ?"
+   * ```
    */
   compileDelete(query: any): string {
     const table = this.wrapTable(query.from || query.table);
@@ -197,7 +408,49 @@ export default class Grammar implements GrammarInterface {
   }
 
   /**
-   * Compile WHERE clauses
+   * Compile WHERE clauses with support for multiple condition types
+   *
+   * Processes an array of WHERE conditions and generates the appropriate SQL.
+   * Supports various condition types including basic comparisons, IN clauses,
+   * BETWEEN ranges, NULL checks, and nested conditions.
+   *
+   * ## Supported Condition Types
+   *
+   * - **basic**: Standard comparisons (`=`, `>`, `<`, `!=`, etc.)
+   * - **in**: IN clause with multiple values
+   * - **not_in**: NOT IN clause with multiple values
+   * - **between**: BETWEEN range conditions
+   * - **null**: IS NULL checks
+   * - **not_null**: IS NOT NULL checks
+   * - **nested**: Parenthesized sub-conditions
+   *
+   * ## Boolean Logic
+   *
+   * Conditions are joined with AND/OR operators based on the `boolean` property.
+   * The first condition never has a boolean prefix.
+   *
+   * ## Parameter Safety
+   *
+   * All values are parameterized using `?` placeholders to prevent SQL injection.
+   *
+   * @param query - Query object containing WHERE conditions
+   * @returns WHERE clause with parameter placeholders, or empty string if no conditions
+   *
+   * @example
+   * ```typescript
+   * const query = {
+   *   queries: {
+   *     wheres: { queries: [
+   *       { type: 'basic', column: 'status', operator: '=', value: 'active' },
+   *       { type: 'in', column: 'category', values: [1, 2, 3], boolean: 'AND' },
+   *       { type: 'null', column: 'deleted_at', boolean: 'AND' }
+   *     ]}
+   *   }
+   * };
+   *
+   * const whereClause = grammar.compileWheres(query);
+   * // Returns: "WHERE `status` = ? AND `category` IN (?, ?, ?) AND `deleted_at` IS NULL"
+   * ```
    */
   protected compileWheres(query: any): string {
     if (
@@ -239,7 +492,53 @@ export default class Grammar implements GrammarInterface {
   }
 
   /**
-   * Compile JOIN clauses
+   * Compile JOIN clauses for table relationships
+   *
+   * Generates SQL JOIN statements for connecting multiple tables.
+   * Supports various JOIN types and handles both simple and complex join conditions.
+   *
+   * ## Supported JOIN Types
+   *
+   * - **INNER JOIN**: Returns only matching rows from both tables
+   * - **LEFT JOIN**: Returns all rows from left table, matching from right
+   * - **RIGHT JOIN**: Returns all rows from right table, matching from left
+   * - **CROSS JOIN**: Cartesian product of both tables (no ON condition)
+   *
+   * ## Join Conditions
+   *
+   * - Standard joins use ON clause with column equality
+   * - Cross joins omit the ON condition entirely
+   * - Column names are automatically wrapped for safety
+   *
+   * @param query - Query object containing JOIN specifications
+   * @returns JOIN clauses as SQL string, or empty string if no joins
+   *
+   * @example
+   * ```typescript
+   * const query = {
+   *   queries: {
+   *     joins: { queries: [
+   *       {
+   *         type: 'LEFT',
+   *         table: 'posts',
+   *         first: 'users.id',
+   *         operator: '=',
+   *         second: 'posts.user_id'
+   *       },
+   *       {
+   *         type: 'INNER',
+   *         table: 'categories',
+   *         first: 'posts.category_id',
+   *         operator: '=',
+   *         second: 'categories.id'
+   *       }
+   *     ]}
+   *   }
+   * };
+   *
+   * const joins = grammar.compileJoins(query);
+   * // Returns: "LEFT JOIN `posts` ON `users`.`id` = `posts`.`user_id` INNER JOIN `categories` ON `posts`.`category_id` = `categories`.`id`"
+   * ```
    */
   protected compileJoins(query: any): string {
     if (
@@ -375,7 +674,35 @@ export default class Grammar implements GrammarInterface {
   }
 
   /**
-   * Wrap table name
+   * Wrap table names with appropriate identifiers for database compatibility
+   *
+   * Handles various table name formats including simple names, aliases,
+   * and subqueries. Ensures proper quoting to prevent SQL injection and
+   * handle reserved keywords or special characters.
+   *
+   * ## Supported Formats
+   *
+   * - **Simple table**: `users` → `` `users` ``
+   * - **Table with alias**: `users as u` → `` `users` AS `u` ``
+   * - **Subquery**: `(SELECT ...) AS alias` → `(SELECT ...) AS `alias``
+   *
+   * ## Database Compatibility
+   *
+   * Base implementation uses backticks (`), but database-specific grammars
+   * override this method for their preferred quoting style:
+   * - MySQL: backticks `` `table` ``
+   * - PostgreSQL: double quotes `"table"`
+   * - SQLite: square brackets `[table]`
+   *
+   * @param table - Table name, alias, or subquery expression
+   * @returns Properly wrapped table identifier
+   *
+   * @example
+   * ```typescript
+   * grammar.wrapTable('users');              // "`users`"
+   * grammar.wrapTable('users as u');         // "`users` AS `u`"
+   * grammar.wrapTable('(SELECT ...) AS sub') // "(SELECT ...) AS `sub`"
+   * ```
    */
   protected wrapTable(table: string | any): string {
     // Handle case where table might be an object with table property
@@ -406,7 +733,41 @@ export default class Grammar implements GrammarInterface {
   }
 
   /**
-   * Wrap column/table identifier
+   * Wrap column and table identifiers for safe SQL generation
+   *
+   * Handles various identifier formats including columns, tables, and special cases.
+   * Provides protection against SQL injection and reserved keyword conflicts.
+   *
+   * ## Identifier Types
+   *
+   * - **Simple column**: `name` → `` `name` ``
+   * - **Qualified column**: `users.name` → `` `users`.`name` ``
+   * - **Wildcard**: `*` → `*` (unchanged)
+   * - **Table wildcard**: `users.*` → `` `users`.* ``
+   * - **Arrays**: `['col1', 'col2']` → `` `col1`, `col2` ``
+   *
+   * ## Special Handling
+   *
+   * - Asterisk (*) is never wrapped as it's a SQL keyword
+   * - Dotted notation is split and each part is wrapped separately
+   * - Arrays are processed recursively and joined with commas
+   *
+   * ## Database Compatibility
+   *
+   * Uses backticks by default, but database-specific grammars override
+   * for their preferred identifier quoting style.
+   *
+   * @param value - Column name, table name, or array of identifiers
+   * @returns Properly wrapped identifier(s)
+   *
+   * @example
+   * ```typescript
+   * grammar.wrap('name');           // "`name`"
+   * grammar.wrap('users.name');     // "`users`.`name`"
+   * grammar.wrap('*');              // "*"
+   * grammar.wrap('users.*');        // "`users`.*"
+   * grammar.wrap(['id', 'name']);   // "`id`, `name`"
+   * ```
    */
   protected wrap(value: string | any): string {
     // Handle array case - if it's an array that got passed by mistake
