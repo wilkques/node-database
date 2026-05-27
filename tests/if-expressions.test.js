@@ -106,8 +106,8 @@ describe("IF Expressions", () => {
         "No Orders"
       );
 
-      expect(ifExpr.value).toBe("IF(EXISTS(SELECT `1` FROM `orders` WHERE `user_id` = ?), ?, ?)");
-      expect(ifExpr.bindings).toEqual(["users.id", "Has Orders", "No Orders"]);
+      expect(ifExpr.value).toBe("IF(EXISTS(SELECT `1` FROM `orders` WHERE `user_id` = `users`.`id`), ?, ?)");
+      expect(ifExpr.bindings).toEqual(["Has Orders", "No Orders"]);
     });
 
     test("should handle complex subquery conditions", () => {
@@ -121,8 +121,8 @@ describe("IF Expressions", () => {
         "No Published Posts"
       );
 
-      expect(ifExpr.value).toBe("IF(EXISTS(SELECT `COUNT(*)` FROM `posts` WHERE `author_id` = ? AND `published` = ?), ?, ?)");
-      expect(ifExpr.bindings).toEqual(["users.id", true, "Published Author", "No Published Posts"]);
+      expect(ifExpr.value).toBe("IF(EXISTS(SELECT COUNT(*) FROM `posts` WHERE `author_id` = `users`.`id` AND `published` = ?), ?, ?)");
+      expect(ifExpr.bindings).toEqual([true, "Published Author", "No Published Posts"]);
     });
   });
 

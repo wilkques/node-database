@@ -467,6 +467,10 @@ export default class Grammar implements GrammarInterface {
 
         switch (where.type) {
           case "basic":
+            // Handle column references vs bound parameters
+            if (this.isColumnReference(where.value, where.column)) {
+              return `${boolean} ${this.wrap(where.column)} ${where.operator} ${this.wrap(where.value)}`;
+            }
             return `${boolean} ${this.wrap(where.column)} ${where.operator} ?`;
           case "in":
             const placeholders = where.values.map(() => "?").join(", ");
@@ -482,6 +486,8 @@ export default class Grammar implements GrammarInterface {
             return `${boolean} ${this.wrap(where.column)} IS NOT NULL`;
           case "nested":
             return `${boolean} (${this.compileWheres(where.query)})`;
+          case "raw":
+            return where.sql; // Raw SQL already includes connector
           default:
             return "";
         }
@@ -571,8 +577,12 @@ export default class Grammar implements GrammarInterface {
     }
 
     const orders = query.queries.orders.queries.map(
-      (order: any) =>
-        `${this.wrap(order.column)} ${(order.direction || "ASC").toUpperCase()}`,
+      (order: any) => {
+        const column = order.isRaw ? order.column : this.wrap(order.column);
+        // For raw SQL, don't append direction (it's already in the SQL)
+        const direction = order.isRaw ? "" : ` ${(order.direction || "ASC").toUpperCase()}`;
+        return `${column}${direction}`;
+      }
     );
 
     return `ORDER BY ${orders.join(", ")}`;
@@ -792,6 +802,51 @@ export default class Grammar implements GrammarInterface {
       return parts.map((part) => `\`${part}\``).join(".");
     }
     return `\`${strValue}\``;
+  }
+
+  /**
+   * Check if a value is a column reference (not a literal value)
+   * Only treat as column reference in specific contexts where it makes sense
+   */
+  protected isColumnReference(value: any, column?: string): boolean {
+    if (typeof value !== "string") {
+      return false;
+    }
+
+    // Check for backtick-wrapped identifiers
+    if (value.startsWith("`") && value.endsWith("`")) {
+      return true;
+    }
+
+    // Check if value looks like a column reference (table.column format)
+    if (value.includes(".")) {
+      // Exclude email addresses (contain @ symbol)
+      if (value.includes("@")) {
+        return false;
+      }
+
+      // Exclude URLs (start with http or contain ://)
+      if (value.startsWith("http") || value.includes("://")) {
+        return false;
+      }
+
+      // Exclude file extensions (end with common file extensions)
+      if (/\.(com|org|net|edu|gov|json|xml|txt|csv|sql)$/i.test(value)) {
+        return false;
+      }
+
+      // Split and check if parts look like SQL identifiers
+      const parts = value.split(".");
+
+      if (parts.length === 2) {
+        // Value is in table.column pattern
+        if (parts.every(part => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(part))) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   /**

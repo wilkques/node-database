@@ -533,6 +533,12 @@ export class Builder implements QueryBuilder {
       return this;
     }
 
+    // Handle subquery IN/NOT IN operations: where('column', 'IN', callback)
+    if (typeof value === "function" && (operator === "IN" || operator === "NOT IN")) {
+      const [subSql, subBindings] = this.createSub(value);
+      return this.whereRaw(`${this.grammar.wrap(column)} ${operator} (${subSql})`, subBindings);
+    }
+
     // Handle two-parameter calls (column, value)
     if (arguments.length === 2) {
       value = operator;
@@ -552,7 +558,8 @@ export class Builder implements QueryBuilder {
     // Also update components for test compatibility
     this.components.wheres.push(whereClause);
 
-    if (value !== undefined && value !== null) {
+    // Only bind values that are not column references
+    if (value !== undefined && value !== null && !this.isColumnReference(value, column)) {
       this.queries.wheres.bindings.push(value);
     }
 
@@ -580,6 +587,12 @@ export class Builder implements QueryBuilder {
       return this;
     }
 
+    // Handle subquery IN/NOT IN operations: orWhere('column', 'IN', callback)
+    if (typeof value === "function" && (operator === "IN" || operator === "NOT IN")) {
+      const [subSql, subBindings] = this.createSub(value);
+      return this.whereRaw(`${this.grammar.wrap(column)} ${operator} (${subSql})`, subBindings, "or");
+    }
+
     if (arguments.length === 2) {
       value = operator;
       operator = "=";
@@ -593,7 +606,8 @@ export class Builder implements QueryBuilder {
       type: "basic",
     });
 
-    if (value !== undefined && value !== null) {
+    // Only bind values that are not column references
+    if (value !== undefined && value !== null && !this.isColumnReference(value, column)) {
       this.queries.wheres.bindings.push(value);
     }
 
@@ -733,7 +747,13 @@ export class Builder implements QueryBuilder {
   /**
    * Add WHERE IN condition
    */
-  whereIn(column: string, values: any[]): this {
+  whereIn(column: string, values: any[] | Function): this {
+    // Handle subquery callback
+    if (typeof values === "function") {
+      const [subSql, subBindings] = this.createSub(values);
+      return this.whereRaw(`${this.grammar.wrap(column)} IN (${subSql})`, subBindings);
+    }
+
     this.queries.wheres.queries.push({
       column,
       values,
@@ -741,7 +761,12 @@ export class Builder implements QueryBuilder {
       type: "in",
     });
 
-    this.queries.wheres.bindings.push(...values);
+    // Handle array values safely
+    if (Array.isArray(values)) {
+      this.queries.wheres.bindings.push(...values);
+    } else {
+      this.queries.wheres.bindings.push(values);
+    }
     return this;
   }
 
@@ -1231,6 +1256,19 @@ export class Builder implements QueryBuilder {
   }
 
   /**
+   * Add raw ORDER BY clause
+   */
+  orderByRaw(sql: string, direction: "asc" | "desc" = "asc"): this {
+    this.queries.orders.queries.push({
+      column: sql,
+      direction: direction.toLowerCase(),
+      isRaw: true,
+    });
+
+    return this;
+  }
+
+  /**
    * Add GROUP BY clause
    */
   groupBy(...columns: string[]): this {
@@ -1491,8 +1529,10 @@ export class Builder implements QueryBuilder {
    * Get query bindings
    */
   getBindings(): any[] {
-    // Order must match SQL compilation order: joins → wheres → havings
+    // Order must match SQL compilation order: columns → froms → joins → wheres → havings
     return [
+      ...(this.queries.columns?.bindings || []),
+      ...(this.queries.froms?.bindings || []),
       ...this.queries.joins.bindings,
       ...this.queries.wheres.bindings,
       ...this.queries.havings.bindings,
@@ -1698,6 +1738,51 @@ export class Builder implements QueryBuilder {
   }
 
   /**
+   * Check if a value is a column reference (not a literal value)
+   * Only treat as column reference in specific contexts where it makes sense
+   */
+  private isColumnReference(value: any, column?: string): boolean {
+    if (typeof value !== "string") {
+      return false;
+    }
+
+    // Check for backtick-wrapped identifiers
+    if (value.startsWith("`") && value.endsWith("`")) {
+      return true;
+    }
+
+    // Check if value looks like a column reference (table.column format)
+    if (value.includes(".")) {
+      // Exclude email addresses (contain @ symbol)
+      if (value.includes("@")) {
+        return false;
+      }
+
+      // Exclude URLs (start with http or contain ://)
+      if (value.startsWith("http") || value.includes("://")) {
+        return false;
+      }
+
+      // Exclude file extensions (end with common file extensions)
+      if (/\.(com|org|net|edu|gov|json|xml|txt|csv|sql)$/i.test(value)) {
+        return false;
+      }
+
+      // Split and check if parts look like SQL identifiers
+      const parts = value.split(".");
+
+      if (parts.length === 2) {
+        // Value is in table.column pattern
+        if (parts.every(part => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(part))) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Prepare value and operator for where conditions
    */
   prepareValueAndOperator(
@@ -1872,9 +1957,22 @@ export class Builder implements QueryBuilder {
   whereRaw(sql: string, bindings: any[] = [], andOr: string = "and"): this {
     const andOrUpper = andOr.toUpperCase();
     const existingWheres = this.getQuery("wheres.queries", []);
-    const prefix = existingWheres.length === 0 ? "" : ` ${andOrUpper} `;
+    const prefix = existingWheres.length === 0 ? " " : ` ${andOrUpper} `;
 
-    return this.addQueryBindings(`${prefix}${sql}`, bindings, "wheres");
+    // Store raw WHERE as object instead of string
+    const whereClause = {
+      type: "raw",
+      sql: `${prefix}${sql}`,
+      boolean: andOrUpper,
+    };
+
+    this.queries.wheres.queries.push(whereClause);
+
+    if (bindings.length > 0) {
+      this.addBinding(bindings, "wheres");
+    }
+
+    return this;
   }
 
   /**
@@ -1923,7 +2021,7 @@ export class Builder implements QueryBuilder {
     let formatted = `(${query})`;
 
     if (as) {
-      formatted += ` AS ${as}`;
+      formatted += ` AS ${this.contactBacktick(as)}`;
     }
 
     return formatted;
