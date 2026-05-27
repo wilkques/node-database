@@ -53,76 +53,105 @@ describe("IF Expressions", () => {
   describe("Function-based IF expressions", () => {
     test("should create IF with function condition", () => {
       const ifExpr = builder.if(
-        query => query.where("status", "active"),
+        (query) => query.where("status", "active"),
         "Active User",
-        "Inactive User"
+        "Inactive User",
       );
 
       expect(ifExpr.type).toBe("raw");
       expect(ifExpr.raw).toBe(true);
       expect(ifExpr.value).toBe("IF(`status` = ?, ?, ?)");
-      expect(ifExpr.bindings).toEqual(["active", "Active User", "Inactive User"]);
+      expect(ifExpr.bindings).toEqual([
+        "active",
+        "Active User",
+        "Inactive User",
+      ]);
     });
 
     test("should handle complex WHERE conditions", () => {
       const ifExpr = builder.if(
-        query => query.where("age", ">", 18).where("verified", true),
+        (query) => query.where("age", ">", 18).where("verified", true),
         "Verified Adult",
-        "Not Verified"
+        "Not Verified",
       );
 
       expect(ifExpr.value).toBe("IF(`age` > ? AND `verified` = ?, ?, ?)");
-      expect(ifExpr.bindings).toEqual([18, true, "Verified Adult", "Not Verified"]);
+      expect(ifExpr.bindings).toEqual([
+        18,
+        true,
+        "Verified Adult",
+        "Not Verified",
+      ]);
     });
 
     test("should handle OR conditions", () => {
       const ifExpr = builder.if(
-        query => query.where("role", "admin").orWhere("role", "moderator"),
+        (query) => query.where("role", "admin").orWhere("role", "moderator"),
         "Staff Member",
-        "Regular User"
+        "Regular User",
       );
 
       expect(ifExpr.value).toBe("IF((`role` = ? OR `role` = ?), ?, ?)");
-      expect(ifExpr.bindings).toEqual(["admin", "moderator", "Staff Member", "Regular User"]);
+      expect(ifExpr.bindings).toEqual([
+        "admin",
+        "moderator",
+        "Staff Member",
+        "Regular User",
+      ]);
     });
 
     test("should handle whereIn conditions", () => {
       const ifExpr = builder.if(
-        query => query.whereIn("department", ["IT", "Engineering"]),
+        (query) => query.whereIn("department", ["IT", "Engineering"]),
         "Tech Department",
-        "Other Department"
+        "Other Department",
       );
 
       expect(ifExpr.value).toBe("IF(`department` IN (?, ?), ?, ?)");
-      expect(ifExpr.bindings).toEqual(["IT", "Engineering", "Tech Department", "Other Department"]);
+      expect(ifExpr.bindings).toEqual([
+        "IT",
+        "Engineering",
+        "Tech Department",
+        "Other Department",
+      ]);
     });
   });
 
   describe("Subquery IF expressions", () => {
     test("should create IF with EXISTS subquery", () => {
       const ifExpr = builder.if(
-        query => query.select("1").from("orders").where("user_id", "=", "users.id"),
+        (query) =>
+          query.select("1").from("orders").where("user_id", "=", "users.id"),
         "Has Orders",
-        "No Orders"
+        "No Orders",
       );
 
-      expect(ifExpr.value).toBe("IF(EXISTS(SELECT `1` FROM `orders` WHERE `user_id` = `users`.`id`), ?, ?)");
+      expect(ifExpr.value).toBe(
+        "IF(EXISTS(SELECT `1` FROM `orders` WHERE `user_id` = `users`.`id`), ?, ?)",
+      );
       expect(ifExpr.bindings).toEqual(["Has Orders", "No Orders"]);
     });
 
     test("should handle complex subquery conditions", () => {
       const ifExpr = builder.if(
-        query => query
-          .select("COUNT(*)")
-          .from("posts")
-          .where("author_id", "=", "users.id")
-          .where("published", true),
+        (query) =>
+          query
+            .select("COUNT(*)")
+            .from("posts")
+            .where("author_id", "=", "users.id")
+            .where("published", true),
         "Published Author",
-        "No Published Posts"
+        "No Published Posts",
       );
 
-      expect(ifExpr.value).toBe("IF(EXISTS(SELECT COUNT(*) FROM `posts` WHERE `author_id` = `users`.`id` AND `published` = ?), ?, ?)");
-      expect(ifExpr.bindings).toEqual([true, "Published Author", "No Published Posts"]);
+      expect(ifExpr.value).toBe(
+        "IF(EXISTS(SELECT COUNT(*) FROM `posts` WHERE `author_id` = `users`.`id` AND `published` = ?), ?, ?)",
+      );
+      expect(ifExpr.bindings).toEqual([
+        true,
+        "Published Author",
+        "No Published Posts",
+      ]);
     });
   });
 
@@ -148,7 +177,9 @@ describe("IF Expressions", () => {
       const level2 = builder.if("score >= 90", level3, "B");
       const level1 = builder.if("score >= 80", level2, "C");
 
-      expect(level1.value).toBe("IF(score >= 80, IF(score >= 90, IF(score >= 95, ?, ?), ?), ?)");
+      expect(level1.value).toBe(
+        "IF(score >= 80, IF(score >= 90, IF(score >= 95, ?, ?), ?), ?)",
+      );
       expect(level1.bindings).toEqual(["A+", "A", "B", "C"]);
     });
   });
@@ -162,11 +193,17 @@ describe("IF Expressions", () => {
         .from("users");
 
       const sql = query.toSql();
-      expect(sql).toBe("SELECT `name`, IF(age >= 18, ?, ?) as age_group FROM `users`");
+      expect(sql).toBe(
+        "SELECT `name`, IF(age >= 18, ?, ?) as age_group FROM `users`",
+      );
     });
 
     test("should work with column references", () => {
-      const ifExpr = builder.if("salary > average_salary", "Above Average", "Below Average");
+      const ifExpr = builder.if(
+        "salary > average_salary",
+        "Above Average",
+        "Below Average",
+      );
 
       expect(ifExpr.value).toBe("IF(salary > average_salary, ?, ?)");
       expect(ifExpr.bindings).toEqual(["Above Average", "Below Average"]);
@@ -190,12 +227,12 @@ describe("IF Expressions", () => {
 
     test("should handle function that builds no conditions", () => {
       const ifExpr = builder.if(
-        query => {
+        (query) => {
           // Function that doesn't add any conditions
           return query;
         },
         "True",
-        "False"
+        "False",
       );
 
       expect(ifExpr.value).toBe("IF(TRUE, ?, ?)");
@@ -209,13 +246,17 @@ describe("IF Expressions", () => {
       const pgBuilder = new Builder(null, pgGrammar);
 
       const ifExpr = pgBuilder.if(
-        query => query.where("category", "premium"),
+        (query) => query.where("category", "premium"),
         "Premium User",
-        "Regular User"
+        "Regular User",
       );
 
       expect(ifExpr.value).toBe('IF("category" = $1, ?, ?)');
-      expect(ifExpr.bindings).toEqual(["premium", "Premium User", "Regular User"]);
+      expect(ifExpr.bindings).toEqual([
+        "premium",
+        "Premium User",
+        "Regular User",
+      ]);
     });
 
     test("should work with SQLite grammar", () => {
@@ -223,12 +264,12 @@ describe("IF Expressions", () => {
       const sqliteBuilder = new Builder(null, sqliteGrammar);
 
       const ifExpr = sqliteBuilder.if(
-        query => query.where("status", "active"),
+        (query) => query.where("status", "active"),
         "Active",
-        "Inactive"
+        "Inactive",
       );
 
-      expect(ifExpr.value).toBe('IF([status] = ?, ?, ?)');
+      expect(ifExpr.value).toBe("IF([status] = ?, ?, ?)");
       expect(ifExpr.bindings).toEqual(["active", "Active", "Inactive"]);
     });
   });
@@ -257,15 +298,18 @@ describe("IF Expressions", () => {
   describe("Performance and bindings", () => {
     test("should maintain correct binding order with complex expressions", () => {
       const ifExpr = builder.if(
-        query => query.where("price", ">", 100).where("discount", "<", 50),
+        (query) => query.where("price", ">", 100).where("discount", "<", 50),
         builder.raw("CONCAT(?, ?)", ["Expensive", "Item"]),
-        builder.raw("CONCAT(?, ?)", ["Cheap", "Item"])
+        builder.raw("CONCAT(?, ?)", ["Cheap", "Item"]),
       );
 
       expect(ifExpr.bindings).toEqual([
-        100, 50,           // condition bindings
-        "Expensive", "Item", // true value bindings
-        "Cheap", "Item"     // false value bindings
+        100,
+        50, // condition bindings
+        "Expensive",
+        "Item", // true value bindings
+        "Cheap",
+        "Item", // false value bindings
       ]);
     });
 

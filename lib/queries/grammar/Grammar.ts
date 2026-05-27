@@ -576,14 +576,14 @@ export default class Grammar implements GrammarInterface {
       return "";
     }
 
-    const orders = query.queries.orders.queries.map(
-      (order: any) => {
-        const column = order.isRaw ? order.column : this.wrap(order.column);
-        // For raw SQL, don't append direction (it's already in the SQL)
-        const direction = order.isRaw ? "" : ` ${(order.direction || "ASC").toUpperCase()}`;
-        return `${column}${direction}`;
-      }
-    );
+    const orders = query.queries.orders.queries.map((order: any) => {
+      const column = order.isRaw ? order.column : this.wrap(order.column);
+      // For raw SQL, don't append direction (it's already in the SQL)
+      const direction = order.isRaw
+        ? ""
+        : ` ${(order.direction || "ASC").toUpperCase()}`;
+      return `${column}${direction}`;
+    });
 
     return `ORDER BY ${orders.join(", ")}`;
   }
@@ -840,7 +840,7 @@ export default class Grammar implements GrammarInterface {
 
       if (parts.length === 2) {
         // Value is in table.column pattern
-        if (parts.every(part => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(part))) {
+        if (parts.every((part) => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(part))) {
           return true;
         }
       }

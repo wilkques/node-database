@@ -549,27 +549,23 @@ Query with aggregated data using subqueries:
 const usersWithOrderCount = await db
   .table("users")
   .select("id", "name", "email")
-  .selectSub(
-    subQuery => {
-      subQuery.table("orders")
-        .select("COUNT(*)")
-        .where("orders.user_id", "=", "users.id");
-    },
-    "order_count"
-  )
+  .selectSub((subQuery) => {
+    subQuery
+      .table("orders")
+      .select("COUNT(*)")
+      .where("orders.user_id", "=", "users.id");
+  }, "order_count")
   .get();
 
-// High-value customers (FROM subquery)  
+// High-value customers (FROM subquery)
 const highValueCustomers = await db
-  .fromSub(
-    subQuery => {
-      subQuery.table("orders")
-        .select(["user_id", "SUM(total) as total_spent"])
-        .where("status", "completed")
-        .groupBy("user_id");
-    },
-    "customer_totals"
-  )
+  .fromSub((subQuery) => {
+    subQuery
+      .table("orders")
+      .select(["user_id", "SUM(total) as total_spent"])
+      .where("status", "completed")
+      .groupBy("user_id");
+  }, "customer_totals")
   .join("users", "users.id", "=", "customer_totals.user_id")
   .select("users.name", "customer_totals.total_spent")
   .where("total_spent", ">", 1000)
@@ -579,12 +575,13 @@ const highValueCustomers = await db
 const usersWithStats = await db
   .table("users")
   .leftJoinSub(
-    subQuery => {
-      subQuery.table("orders")
+    (subQuery) => {
+      subQuery
+        .table("orders")
         .select([
           "user_id",
-          "COUNT(*) as order_count", 
-          "AVG(total) as avg_order_value"
+          "COUNT(*) as order_count",
+          "AVG(total) as avg_order_value",
         ])
         .where("status", "completed")
         .groupBy("user_id");
@@ -592,12 +589,12 @@ const usersWithStats = await db
     "order_stats",
     "users.id",
     "=",
-    "order_stats.user_id"
+    "order_stats.user_id",
   )
   .select(
     "users.name",
-    "order_stats.order_count", 
-    "order_stats.avg_order_value"
+    "order_stats.order_count",
+    "order_stats.avg_order_value",
   )
   .get();
 ```
@@ -610,7 +607,9 @@ For complex queries requiring custom SQL:
 // Custom ORDER BY with subquery
 const topUsers = await db
   .table("users")
-  .orderByRaw("(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) DESC")
+  .orderByRaw(
+    "(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) DESC",
+  )
   .limit(10)
   .get();
 

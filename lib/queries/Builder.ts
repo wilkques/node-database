@@ -534,9 +534,15 @@ export class Builder implements QueryBuilder {
     }
 
     // Handle subquery IN/NOT IN operations: where('column', 'IN', callback)
-    if (typeof value === "function" && (operator === "IN" || operator === "NOT IN")) {
+    if (
+      typeof value === "function" &&
+      (operator === "IN" || operator === "NOT IN")
+    ) {
       const [subSql, subBindings] = this.createSub(value);
-      return this.whereRaw(`${this.grammar.wrap(column)} ${operator} (${subSql})`, subBindings);
+      return this.whereRaw(
+        `${this.grammar.wrap(column)} ${operator} (${subSql})`,
+        subBindings,
+      );
     }
 
     // Handle two-parameter calls (column, value)
@@ -559,7 +565,11 @@ export class Builder implements QueryBuilder {
     this.components.wheres.push(whereClause);
 
     // Only bind values that are not column references
-    if (value !== undefined && value !== null && !this.isColumnReference(value, column)) {
+    if (
+      value !== undefined &&
+      value !== null &&
+      !this.isColumnReference(value, column)
+    ) {
       this.queries.wheres.bindings.push(value);
     }
 
@@ -588,9 +598,16 @@ export class Builder implements QueryBuilder {
     }
 
     // Handle subquery IN/NOT IN operations: orWhere('column', 'IN', callback)
-    if (typeof value === "function" && (operator === "IN" || operator === "NOT IN")) {
+    if (
+      typeof value === "function" &&
+      (operator === "IN" || operator === "NOT IN")
+    ) {
       const [subSql, subBindings] = this.createSub(value);
-      return this.whereRaw(`${this.grammar.wrap(column)} ${operator} (${subSql})`, subBindings, "or");
+      return this.whereRaw(
+        `${this.grammar.wrap(column)} ${operator} (${subSql})`,
+        subBindings,
+        "or",
+      );
     }
 
     if (arguments.length === 2) {
@@ -607,7 +624,11 @@ export class Builder implements QueryBuilder {
     });
 
     // Only bind values that are not column references
-    if (value !== undefined && value !== null && !this.isColumnReference(value, column)) {
+    if (
+      value !== undefined &&
+      value !== null &&
+      !this.isColumnReference(value, column)
+    ) {
       this.queries.wheres.bindings.push(value);
     }
 
@@ -751,7 +772,10 @@ export class Builder implements QueryBuilder {
     // Handle subquery callback
     if (typeof values === "function") {
       const [subSql, subBindings] = this.createSub(values);
-      return this.whereRaw(`${this.grammar.wrap(column)} IN (${subSql})`, subBindings);
+      return this.whereRaw(
+        `${this.grammar.wrap(column)} IN (${subSql})`,
+        subBindings,
+      );
     }
 
     this.queries.wheres.queries.push({
@@ -1522,7 +1546,11 @@ export class Builder implements QueryBuilder {
    */
   // IF functionality uses RawExpression return type (no builder pattern needed)
   if(condition: any, trueValue: any, falseValue: any): RawExpression {
-    return new IfBuilderImpl(() => this.newQuery()).buildIf(condition, trueValue, falseValue);
+    return new IfBuilderImpl(() => this.newQuery()).buildIf(
+      condition,
+      trueValue,
+      falseValue,
+    );
   }
 
   /**
@@ -1773,7 +1801,7 @@ export class Builder implements QueryBuilder {
 
       if (parts.length === 2) {
         // Value is in table.column pattern
-        if (parts.every(part => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(part))) {
+        if (parts.every((part) => /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(part))) {
           return true;
         }
       }
@@ -2076,7 +2104,10 @@ class CaseBuilderImpl implements CaseBuilder {
     isSubquery: boolean;
   } {
     // Check if builder has FROM clause to determine if it's a complete query
-    if (builder.components?.from || (builder as any).queries?.froms?.queries?.length > 0) {
+    if (
+      builder.components?.from ||
+      (builder as any).queries?.froms?.queries?.length > 0
+    ) {
       // Has FROM clause - generate full SQL as subquery
       const sql = builder.toSql();
       return { condition: `(${sql})`, isSubquery: true };
@@ -2207,10 +2238,13 @@ class IfBuilderImpl {
     // Handle different condition types
     if (typeof condition === "function") {
       // Function-based condition: IF(EXISTS(SELECT...) OR WHERE conditions, true, false)
-      const subBuilder = this.newQueryFn ? this.newQueryFn() : new Builder(null);
+      const subBuilder = this.newQueryFn
+        ? this.newQueryFn()
+        : new Builder(null);
       condition(subBuilder);
 
-      const { conditionExpression, isSubquery } = this.extractConditionOrSubquery(subBuilder);
+      const { conditionExpression, isSubquery } =
+        this.extractConditionOrSubquery(subBuilder);
       conditionSql = conditionExpression;
       bindings.push(...subBuilder.getBindings());
     } else if (condition && typeof condition === "object" && condition.raw) {
@@ -2246,8 +2280,8 @@ class IfBuilderImpl {
     }
 
     // Generate IF SQL
-    const trueSql = (trueValue && trueValue.raw) ? trueValue.value : "?";
-    const falseSql = (falseValue && falseValue.raw) ? falseValue.value : "?";
+    const trueSql = trueValue && trueValue.raw ? trueValue.value : "?";
+    const falseSql = falseValue && falseValue.raw ? falseValue.value : "?";
     const sql = `IF(${conditionSql}, ${trueSql}, ${falseSql})`;
 
     return {
@@ -2267,7 +2301,10 @@ class IfBuilderImpl {
     isSubquery: boolean;
   } {
     // Check if builder has FROM clause to determine if it's a complete query
-    if (builder.components?.from || (builder as any).queries?.froms?.queries?.length > 0) {
+    if (
+      builder.components?.from ||
+      (builder as any).queries?.froms?.queries?.length > 0
+    ) {
       // Has FROM clause - generate full SQL as EXISTS subquery
       const sql = builder.toSql();
       return { conditionExpression: `EXISTS(${sql})`, isSubquery: true };
@@ -2285,7 +2322,10 @@ class IfBuilderImpl {
         let condition = whereClause.substring(6); // Remove "WHERE " prefix
 
         // Add parentheses around complex conditions (containing OR, AND)
-        if (condition.includes(" OR ") || (condition.includes(" AND ") && condition.includes(" OR "))) {
+        if (
+          condition.includes(" OR ") ||
+          (condition.includes(" AND ") && condition.includes(" OR "))
+        ) {
           condition = `(${condition})`;
         }
 
@@ -2293,7 +2333,10 @@ class IfBuilderImpl {
       } else if (whereClause) {
         // Add parentheses around complex conditions
         let condition = whereClause;
-        if (condition.includes(" OR ") || (condition.includes(" AND ") && condition.includes(" OR "))) {
+        if (
+          condition.includes(" OR ") ||
+          (condition.includes(" AND ") && condition.includes(" OR "))
+        ) {
           condition = `(${condition})`;
         }
         return { conditionExpression: condition, isSubquery: false };

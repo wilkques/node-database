@@ -196,7 +196,9 @@ const users = await db
   .select(
     "name",
     "email",
-    db.if("status = 'active'", "Active User", "Inactive User").as("user_status"),
+    db
+      .if("status = 'active'", "Active User", "Inactive User")
+      .as("user_status"),
   )
   .get();
 
@@ -206,11 +208,9 @@ const products = await db
   .select(
     "name",
     "price",
-    db.if(
-      (q) => q.where("inventory", ">", 0),
-      "In Stock",
-      "Out of Stock"
-    ).as("availability"),
+    db
+      .if((q) => q.where("inventory", ">", 0), "In Stock", "Out of Stock")
+      .as("availability"),
   )
   .get();
 
@@ -220,11 +220,13 @@ const orders = await db
   .select(
     "id",
     "total",
-    db.if(
-      "status = 'completed'",
-      db.if("total > 100", "High Value", "Normal"),
-      "Pending"
-    ).as("order_category"),
+    db
+      .if(
+        "status = 'completed'",
+        db.if("total > 100", "High Value", "Normal"),
+        "Pending",
+      )
+      .as("order_category"),
   )
   .get();
 
@@ -233,11 +235,13 @@ const userStats = await db
   .table("users")
   .select(
     "name",
-    db.if(
-      db.table("posts").count().whereRaw("posts.author_id = users.id"),
-      "Has Posts",
-      "No Posts"
-    ).as("post_status"),
+    db
+      .if(
+        db.table("posts").count().whereRaw("posts.author_id = users.id"),
+        "Has Posts",
+        "No Posts",
+      )
+      .as("post_status"),
   )
   .get();
 
@@ -250,10 +254,7 @@ await db.table("products").update({
 // IF in WHERE clauses
 const filteredUsers = await db
   .table("users")
-  .where(
-    db.if("age >= 18", "status", "'minor'"),
-    "active"
-  )
+  .where(db.if("age >= 18", "status", "'minor'"), "active")
   .get();
 ```
 
@@ -433,16 +434,20 @@ const userAnalytics = await db
   .select(
     "id",
     "name",
-    db.if(
-      db.table("orders").count().whereRaw("orders.user_id = users.id"),
-      "Customer",
-      "Prospect"
-    ).as("customer_type"),
-    db.if(
-      (q) => q.whereRaw("created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"),
-      "New",
-      "Existing"
-    ).as("user_age"),
+    db
+      .if(
+        db.table("orders").count().whereRaw("orders.user_id = users.id"),
+        "Customer",
+        "Prospect",
+      )
+      .as("customer_type"),
+    db
+      .if(
+        (q) => q.whereRaw("created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"),
+        "New",
+        "Existing",
+      )
+      .as("user_age"),
   )
   .get();
 
@@ -453,11 +458,13 @@ const reportData = await db
     "name",
     "price",
     db.if("category = 'electronics'", "price * 0.9", "price").as("final_price"),
-    db.if(
-      db.raw("inventory > (SELECT AVG(inventory) FROM products)"),
-      "High Stock",
-      "Low Stock"
-    ).as("stock_level"),
+    db
+      .if(
+        db.raw("inventory > (SELECT AVG(inventory) FROM products)"),
+        "High Stock",
+        "Low Stock",
+      )
+      .as("stock_level"),
   )
   .get();
 ```

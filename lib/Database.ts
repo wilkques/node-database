@@ -66,7 +66,7 @@ import {
   ConnectionError,
   ConfigurationError,
   DriverNotFoundError,
-  DatabaseErrorFactory
+  DatabaseErrorFactory,
 } from "./errors/DatabaseError.js";
 
 /**
@@ -369,14 +369,14 @@ class Database {
       if (!config.database) {
         throw new ConfigurationError(
           `Database name is required for ${config.driver}`,
-          { driver: config.driver }
+          { driver: config.driver },
         );
       }
     } else {
       if (!config.filename && !config.database) {
         throw new ConfigurationError(
           "SQLite requires either 'filename' or 'database' field",
-          { driver: config.driver }
+          { driver: config.driver },
         );
       }
       // Use database as filename if filename not provided
@@ -392,7 +392,11 @@ class Database {
       Connection = ConnectionModule.default;
     } catch (error: any) {
       if (error.code === "MODULE_NOT_FOUND") {
-        throw new DriverNotFoundError(config.driver, ["mysql", "postgres", "sqlite"]);
+        throw new DriverNotFoundError(config.driver, [
+          "mysql",
+          "postgres",
+          "sqlite",
+        ]);
       }
       throw DatabaseErrorFactory.fromError(error, { driver: config.driver });
     }
@@ -409,8 +413,8 @@ class Database {
           driver: config.driver,
           host: config.host,
           database: config.database,
-          originalError: error
-        }
+          originalError: error,
+        },
       );
     }
 

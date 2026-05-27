@@ -397,13 +397,14 @@ Join with aggregated data from subqueries:
 const usersWithOrderStats = await db
   .table("users")
   .joinSub(
-    subQuery => {
-      subQuery.table("orders")
+    (subQuery) => {
+      subQuery
+        .table("orders")
         .select([
           "user_id",
           "COUNT(*) as order_count",
           "SUM(total) as total_spent",
-          "AVG(total) as avg_order_value"
+          "AVG(total) as avg_order_value",
         ])
         .where("status", "completed")
         .groupBy("user_id");
@@ -411,14 +412,14 @@ const usersWithOrderStats = await db
     "order_stats",
     "users.id",
     "=",
-    "order_stats.user_id"
+    "order_stats.user_id",
   )
   .select(
     "users.name",
-    "users.email", 
+    "users.email",
     "order_stats.order_count",
     "order_stats.total_spent",
-    "order_stats.avg_order_value"
+    "order_stats.avg_order_value",
   )
   .get();
 ```
@@ -432,25 +433,22 @@ Include all users even if they have no matching subquery data:
 const usersWithReviews = await db
   .table("users")
   .leftJoinSub(
-    subQuery => {
-      subQuery.table("reviews")
+    (subQuery) => {
+      subQuery
+        .table("reviews")
         .select([
           "user_id",
           "COUNT(*) as review_count",
-          "AVG(rating) as avg_rating"
+          "AVG(rating) as avg_rating",
         ])
         .groupBy("user_id");
     },
     "review_stats",
     "users.id",
-    "=", 
-    "review_stats.user_id"
+    "=",
+    "review_stats.user_id",
   )
-  .select(
-    "users.name",
-    "review_stats.review_count",
-    "review_stats.avg_rating"
-  )
+  .select("users.name", "review_stats.review_count", "review_stats.avg_rating")
   .get();
 ```
 
@@ -463,38 +461,44 @@ Multiple levels of aggregation:
 const productPerformance = await db
   .table("products")
   .leftJoinSub(
-    subQuery => {
-      subQuery.table("order_items")
+    (subQuery) => {
+      subQuery
+        .table("order_items")
         .select([
           "product_id",
           "SUM(quantity) as total_sold",
           "SUM(quantity * price) as total_revenue",
-          "COUNT(DISTINCT order_id) as order_count"
+          "COUNT(DISTINCT order_id) as order_count",
         ])
         .join("orders", "order_items.order_id", "=", "orders.id")
         .where("orders.status", "completed")
-        .where("orders.created_at", ">=", db.raw("DATE_SUB(NOW(), INTERVAL 30 DAY)"))
+        .where(
+          "orders.created_at",
+          ">=",
+          db.raw("DATE_SUB(NOW(), INTERVAL 30 DAY)"),
+        )
         .groupBy("product_id");
     },
     "sales_stats",
     "products.id",
     "=",
-    "sales_stats.product_id"
+    "sales_stats.product_id",
   )
   .leftJoinSub(
-    subQuery => {
-      subQuery.table("reviews")
+    (subQuery) => {
+      subQuery
+        .table("reviews")
         .select([
           "product_id",
           "COUNT(*) as review_count",
-          "AVG(rating) as avg_rating"
+          "AVG(rating) as avg_rating",
         ])
         .groupBy("product_id");
     },
-    "review_stats", 
+    "review_stats",
     "products.id",
     "=",
-    "review_stats.product_id"
+    "review_stats.product_id",
   )
   .select(
     "products.name",
@@ -503,7 +507,7 @@ const productPerformance = await db
     "sales_stats.total_revenue",
     "sales_stats.order_count",
     "review_stats.review_count",
-    "review_stats.avg_rating"
+    "review_stats.avg_rating",
   )
   .orderBy("sales_stats.total_revenue", "desc")
   .get();

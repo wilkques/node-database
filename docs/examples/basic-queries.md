@@ -442,14 +442,12 @@ const activeCustomers = await db
 const usersWithOrderCount = await db
   .table("users")
   .select("id", "name", "email")
-  .selectSub(
-    subQuery => {
-      subQuery.table("orders")
-        .select("COUNT(*)")
-        .where("orders.user_id", "=", "users.id");
-    },
-    "order_count"
-  )
+  .selectSub((subQuery) => {
+    subQuery
+      .table("orders")
+      .select("COUNT(*)")
+      .where("orders.user_id", "=", "users.id");
+  }, "order_count")
   .get();
 ```
 
@@ -475,15 +473,13 @@ const usersWithOrderCount = await db
 ```javascript
 // Query based on aggregated data
 const highValueCustomers = await db
-  .fromSub(
-    subQuery => {
-      subQuery.table("orders")
-        .select(["user_id", "SUM(total) as total_spent"])
-        .where("status", "completed")
-        .groupBy("user_id");
-    },
-    "customer_totals"
-  )
+  .fromSub((subQuery) => {
+    subQuery
+      .table("orders")
+      .select(["user_id", "SUM(total) as total_spent"])
+      .where("status", "completed")
+      .groupBy("user_id");
+  }, "customer_totals")
   .join("users", "users.id", "=", "customer_totals.user_id")
   .select("users.name", "customer_totals.total_spent")
   .where("total_spent", ">", 1000)
@@ -497,26 +493,27 @@ const highValueCustomers = await db
 const usersWithStats = await db
   .table("users")
   .leftJoinSub(
-    subQuery => {
-      subQuery.table("orders")
+    (subQuery) => {
+      subQuery
+        .table("orders")
         .select([
-          "user_id", 
+          "user_id",
           "COUNT(*) as order_count",
-          "AVG(total) as avg_order_value"
+          "AVG(total) as avg_order_value",
         ])
         .where("status", "completed")
         .groupBy("user_id");
     },
     "order_stats",
     "users.id",
-    "=", 
-    "order_stats.user_id"
+    "=",
+    "order_stats.user_id",
   )
   .select(
-    "users.name", 
+    "users.name",
     "users.email",
     "order_stats.order_count",
-    "order_stats.avg_order_value"
+    "order_stats.avg_order_value",
   )
   .get();
 ```

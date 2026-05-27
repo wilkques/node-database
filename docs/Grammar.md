@@ -450,17 +450,19 @@ When using `orderByRaw()`, the Grammar system recognizes raw SQL expressions and
 // Raw ORDER BY with subquery - handled correctly
 const query = builder
   .table("users")
-  .orderByRaw("(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) DESC");
+  .orderByRaw(
+    "(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) DESC",
+  );
 
 // Generated SQL (MySQL):
-// SELECT * FROM `users` 
+// SELECT * FROM `users`
 // ORDER BY (SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) DESC
 ```
 
 ### Key Improvements (v1.0.1)
 
 - **Raw Expression Detection**: The Grammar system now properly identifies raw SQL expressions
-- **No Identifier Wrapping**: Raw SQL expressions are not wrapped with database-specific identifiers  
+- **No Identifier Wrapping**: Raw SQL expressions are not wrapped with database-specific identifiers
 - **No Direction Appending**: Raw ORDER BY expressions maintain their specified direction without additional modification
 - **Subquery Support**: Complex subqueries in ORDER BY clauses are preserved exactly as written
 
@@ -472,7 +474,9 @@ The Grammar system uses an `isRaw` flag to determine processing behavior:
 // Internal Grammar processing
 const orders = query.queries.orders.queries.map((order) => {
   const column = order.isRaw ? order.column : this.wrap(order.column);
-  const direction = order.isRaw ? "" : ` ${(order.direction || "ASC").toUpperCase()}`;
+  const direction = order.isRaw
+    ? ""
+    : ` ${(order.direction || "ASC").toUpperCase()}`;
   return `${column}${direction}`;
 });
 ```

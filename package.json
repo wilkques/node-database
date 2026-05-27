@@ -1,5 +1,5 @@
 {
-  "name": "@wilkques/database",
+  "name": "wilkques-database",
   "version": "1.0.1",
   "description": "Modern Node.js database query builder inspired by wilkques/database PHP package",
   "main": "dist/index.js",

@@ -78,7 +78,8 @@ export default class MySQL extends Grammar {
       return "";
 
     // Don't wrap function names (e.g., COUNT(*), MAX(id), SUM(amount))
-    const functionsPattern = /^(COUNT|MAX|MIN|SUM|AVG|CONCAT|SUBSTR|LENGTH|UPPER|LOWER|TRIM|COALESCE|IFNULL|NULLIF|ROUND|FLOOR|CEIL|ABS|SQRT|POW|MOD|NOW|CURDATE|CURTIME|DATE|TIME|YEAR|MONTH|DAY|HOUR|MINUTE|SECOND)\s*\(/i;
+    const functionsPattern =
+      /^(COUNT|MAX|MIN|SUM|AVG|CONCAT|SUBSTR|LENGTH|UPPER|LOWER|TRIM|COALESCE|IFNULL|NULLIF|ROUND|FLOOR|CEIL|ABS|SQRT|POW|MOD|NOW|CURDATE|CURTIME|DATE|TIME|YEAR|MONTH|DAY|HOUR|MINUTE|SECOND)\s*\(/i;
     if (functionsPattern.test(strValue)) {
       return strValue;
     }

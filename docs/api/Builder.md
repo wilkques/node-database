@@ -85,10 +85,10 @@ selectSub(subquery, alias);
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-| --------- | ---- | -------- | ----------- |
-| `subquery` | `Function\|Builder` | ✅ | Subquery callback function or Builder instance |
-| `alias` | `string` | ✅ | Alias name for the subquery result column |
+| Parameter  | Type                | Required | Description                                    |
+| ---------- | ------------------- | -------- | ---------------------------------------------- |
+| `subquery` | `Function\|Builder` | ✅       | Subquery callback function or Builder instance |
+| `alias`    | `string`            | ✅       | Alias name for the subquery result column      |
 
 #### Return Value
 
@@ -100,30 +100,29 @@ selectSub(subquery, alias);
 
 ```javascript
 const users = await db
-  .table('users')
-  .select('id', 'name')
-  .selectSub(
-    subQuery => {
-      subQuery.table('orders')
-        .select('COUNT(*)')
-        .where('orders.user_id', '=', 'users.id');
-    },
-    'order_count'
-  )
+  .table("users")
+  .select("id", "name")
+  .selectSub((subQuery) => {
+    subQuery
+      .table("orders")
+      .select("COUNT(*)")
+      .where("orders.user_id", "=", "users.id");
+  }, "order_count")
   .get();
 ```
 
 **Builder instance subquery:**
 
 ```javascript
-const orderCountSubquery = db.table('orders')
-  .select('COUNT(*)')
-  .where('orders.user_id', '=', 'users.id');
+const orderCountSubquery = db
+  .table("orders")
+  .select("COUNT(*)")
+  .where("orders.user_id", "=", "users.id");
 
 const users = await db
-  .table('users')
-  .select('id', 'name')
-  .selectSub(orderCountSubquery, 'order_count')
+  .table("users")
+  .select("id", "name")
+  .selectSub(orderCountSubquery, "order_count")
   .get();
 ```
 
@@ -141,10 +140,10 @@ fromSub(subquery, alias);
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-| --------- | ---- | -------- | ----------- |
-| `subquery` | `Function\|Builder` | ✅ | Subquery callback function or Builder instance |
-| `alias` | `string` | ✅ | Alias name for the subquery table |
+| Parameter  | Type                | Required | Description                                    |
+| ---------- | ------------------- | -------- | ---------------------------------------------- |
+| `subquery` | `Function\|Builder` | ✅       | Subquery callback function or Builder instance |
+| `alias`    | `string`            | ✅       | Alias name for the subquery table              |
 
 #### Return Value
 
@@ -156,16 +155,14 @@ fromSub(subquery, alias);
 
 ```javascript
 const salesData = await db
-  .fromSub(
-    subQuery => {
-      subQuery.table('orders')
-        .select(['user_id', 'SUM(amount) as total_spent'])
-        .where('status', 'completed')
-        .groupBy('user_id');
-    },
-    'sales_summary'
-  )
-  .where('total_spent', '>', 1000)
+  .fromSub((subQuery) => {
+    subQuery
+      .table("orders")
+      .select(["user_id", "SUM(amount) as total_spent"])
+      .where("status", "completed")
+      .groupBy("user_id");
+  }, "sales_summary")
+  .where("total_spent", ">", 1000)
   .get();
 ```
 
@@ -391,13 +388,13 @@ joinSub(subquery, alias, first, operator, second);
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-| --------- | ---- | -------- | ----------- |
-| `subquery` | `Function\|Builder` | ✅ | Subquery callback function or Builder instance |
-| `alias` | `string` | ✅ | Alias name for the subquery table |
-| `first` | `string` | ✅ | First column for join condition |
-| `operator` | `string` | ❌ | Comparison operator (default: '=') |
-| `second` | `string` | ✅ | Second column for join condition |
+| Parameter  | Type                | Required | Description                                    |
+| ---------- | ------------------- | -------- | ---------------------------------------------- |
+| `subquery` | `Function\|Builder` | ✅       | Subquery callback function or Builder instance |
+| `alias`    | `string`            | ✅       | Alias name for the subquery table              |
+| `first`    | `string`            | ✅       | First column for join condition                |
+| `operator` | `string`            | ❌       | Comparison operator (default: '=')             |
+| `second`   | `string`            | ✅       | Second column for join condition               |
 
 #### Usage Examples
 
@@ -405,19 +402,24 @@ joinSub(subquery, alias, first, operator, second);
 
 ```javascript
 const users = await db
-  .table('users')
+  .table("users")
   .joinSub(
-    subQuery => {
-      subQuery.table('orders')
-        .select(['user_id', 'COUNT(*) as order_count', 'SUM(total) as total_spent'])
-        .groupBy('user_id');
+    (subQuery) => {
+      subQuery
+        .table("orders")
+        .select([
+          "user_id",
+          "COUNT(*) as order_count",
+          "SUM(total) as total_spent",
+        ])
+        .groupBy("user_id");
     },
-    'user_stats',
-    'users.id',
-    '=',
-    'user_stats.user_id'
+    "user_stats",
+    "users.id",
+    "=",
+    "user_stats.user_id",
   )
-  .select('users.name', 'user_stats.order_count', 'user_stats.total_spent')
+  .select("users.name", "user_stats.order_count", "user_stats.total_spent")
   .get();
 ```
 
@@ -437,19 +439,24 @@ leftJoinSub(subquery, alias, first, operator, second);
 
 ```javascript
 const users = await db
-  .table('users')
+  .table("users")
   .leftJoinSub(
-    subQuery => {
-      subQuery.table('reviews')
-        .select(['user_id', 'AVG(rating) as avg_rating', 'COUNT(*) as review_count'])
-        .groupBy('user_id');
+    (subQuery) => {
+      subQuery
+        .table("reviews")
+        .select([
+          "user_id",
+          "AVG(rating) as avg_rating",
+          "COUNT(*) as review_count",
+        ])
+        .groupBy("user_id");
     },
-    'user_reviews',
-    'users.id',
-    '=',
-    'user_reviews.user_id'
+    "user_reviews",
+    "users.id",
+    "=",
+    "user_reviews.user_id",
   )
-  .select('users.name', 'user_reviews.avg_rating', 'user_reviews.review_count')
+  .select("users.name", "user_reviews.avg_rating", "user_reviews.review_count")
   .get();
 ```
 
