@@ -538,6 +538,92 @@ try {
 2. Check parameter types are correct
 3. Use `db.raw()` for special SQL expressions
 
+## Advanced Features
+
+### Subqueries
+
+Query with aggregated data using subqueries:
+
+```javascript
+// Users with their order count (SELECT subquery)
+const usersWithOrderCount = await db
+  .table("users")
+  .select("id", "name", "email")
+  .selectSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select("COUNT(*)")
+        .where("orders.user_id", "=", "users.id");
+    },
+    "order_count"
+  )
+  .get();
+
+// High-value customers (FROM subquery)  
+const highValueCustomers = await db
+  .fromSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select(["user_id", "SUM(total) as total_spent"])
+        .where("status", "completed")
+        .groupBy("user_id");
+    },
+    "customer_totals"
+  )
+  .join("users", "users.id", "=", "customer_totals.user_id")
+  .select("users.name", "customer_totals.total_spent")
+  .where("total_spent", ">", 1000)
+  .get();
+
+// Users with order statistics (JOIN subquery)
+const usersWithStats = await db
+  .table("users")
+  .leftJoinSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select([
+          "user_id",
+          "COUNT(*) as order_count", 
+          "AVG(total) as avg_order_value"
+        ])
+        .where("status", "completed")
+        .groupBy("user_id");
+    },
+    "order_stats",
+    "users.id",
+    "=",
+    "order_stats.user_id"
+  )
+  .select(
+    "users.name",
+    "order_stats.order_count", 
+    "order_stats.avg_order_value"
+  )
+  .get();
+```
+
+### Raw SQL Expressions
+
+For complex queries requiring custom SQL:
+
+```javascript
+// Custom ORDER BY with subquery
+const topUsers = await db
+  .table("users")
+  .orderByRaw("(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) DESC")
+  .limit(10)
+  .get();
+
+// Complex WHERE conditions
+const results = await db
+  .table("products")
+  .whereRaw("price BETWEEN ? AND ?", [100, 500])
+  .whereRaw("MATCH(name, description) AGAINST(?)", ["laptop gaming"])
+  .get();
+```
+
+---
+
 ## Next Steps
 
 Now that you understand the basics, continue exploring:

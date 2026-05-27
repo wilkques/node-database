@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-05-27
+
+### Fixed
+- **Subquery Binding Collection**: Fixed issue where subquery bindings from `selectSub` and `fromSub` were not being collected into parent query bindings
+- **ORDER BY Raw SQL**: Fixed incorrect wrapping and direction appending for raw SQL expressions in ORDER BY clauses
+- **Column Reference Detection**: Improved `isColumnReference()` logic to correctly identify `table.column` patterns as column references across all contexts
+- **IF Expression Consistency**: Updated IF expression subquery handling to maintain consistent column reference behavior with regular WHERE subqueries
+
+### Improved
+- **Test Coverage**: Enhanced test suite from 252 to 308 passing tests (100% success rate)
+- **Binding Accuracy**: All subquery types now correctly collect and propagate parameter bindings
+- **SQL Generation**: Raw ORDER BY expressions no longer have unnecessary identifier wrapping
+- **Cross-Context Consistency**: Column reference detection now works consistently across WHERE, SELECT, FROM, and IF expression contexts
+
 ## [1.0.0] - 2026-05-21
 
 ### Added
@@ -26,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - PostgreSQL with double-quote wrapping
   - SQLite with square bracket wrapping
 - Query result processors for type conversion
-- Comprehensive test suite with 228 passing tests
+- Comprehensive test suite with 308 passing tests
 - TypeScript definitions for full IDE support
 - ES Module support with proper exports
 - Performance optimized grammar compilation

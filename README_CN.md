@@ -2,9 +2,9 @@
 
 <div align="center">
 
-![Node.js](https://img.shields.io/badge/Node.js-v16+-green.svg)
+![Node.js](https://img.shields.io/badge/Node.js-v18+-green.svg)
 ![Databases](https://img.shields.io/badge/MySQL%20%7C%20PostgreSQL%20%7C%20SQLite-blue.svg)
-![Tests](https://img.shields.io/badge/Tests-156%20Passed-brightgreen.svg)
+![Tests](https://img.shields.io/badge/Tests-308%20Passed-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 **现代 Node.js 数据库查询构建器**  

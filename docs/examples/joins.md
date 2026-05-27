@@ -386,6 +386,131 @@ const categoryHierarchy = await db
   .get();
 ```
 
+## Subquery JOINs
+
+### INNER JOIN with Subquery
+
+Join with aggregated data from subqueries:
+
+```javascript
+// Users with their order statistics
+const usersWithOrderStats = await db
+  .table("users")
+  .joinSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select([
+          "user_id",
+          "COUNT(*) as order_count",
+          "SUM(total) as total_spent",
+          "AVG(total) as avg_order_value"
+        ])
+        .where("status", "completed")
+        .groupBy("user_id");
+    },
+    "order_stats",
+    "users.id",
+    "=",
+    "order_stats.user_id"
+  )
+  .select(
+    "users.name",
+    "users.email", 
+    "order_stats.order_count",
+    "order_stats.total_spent",
+    "order_stats.avg_order_value"
+  )
+  .get();
+```
+
+### LEFT JOIN with Subquery
+
+Include all users even if they have no matching subquery data:
+
+```javascript
+// All users with optional review statistics
+const usersWithReviews = await db
+  .table("users")
+  .leftJoinSub(
+    subQuery => {
+      subQuery.table("reviews")
+        .select([
+          "user_id",
+          "COUNT(*) as review_count",
+          "AVG(rating) as avg_rating"
+        ])
+        .groupBy("user_id");
+    },
+    "review_stats",
+    "users.id",
+    "=", 
+    "review_stats.user_id"
+  )
+  .select(
+    "users.name",
+    "review_stats.review_count",
+    "review_stats.avg_rating"
+  )
+  .get();
+```
+
+### Complex Subquery JOIN
+
+Multiple levels of aggregation:
+
+```javascript
+// Products with sales performance data
+const productPerformance = await db
+  .table("products")
+  .leftJoinSub(
+    subQuery => {
+      subQuery.table("order_items")
+        .select([
+          "product_id",
+          "SUM(quantity) as total_sold",
+          "SUM(quantity * price) as total_revenue",
+          "COUNT(DISTINCT order_id) as order_count"
+        ])
+        .join("orders", "order_items.order_id", "=", "orders.id")
+        .where("orders.status", "completed")
+        .where("orders.created_at", ">=", db.raw("DATE_SUB(NOW(), INTERVAL 30 DAY)"))
+        .groupBy("product_id");
+    },
+    "sales_stats",
+    "products.id",
+    "=",
+    "sales_stats.product_id"
+  )
+  .leftJoinSub(
+    subQuery => {
+      subQuery.table("reviews")
+        .select([
+          "product_id",
+          "COUNT(*) as review_count",
+          "AVG(rating) as avg_rating"
+        ])
+        .groupBy("product_id");
+    },
+    "review_stats", 
+    "products.id",
+    "=",
+    "review_stats.product_id"
+  )
+  .select(
+    "products.name",
+    "products.price",
+    "sales_stats.total_sold",
+    "sales_stats.total_revenue",
+    "sales_stats.order_count",
+    "review_stats.review_count",
+    "review_stats.avg_rating"
+  )
+  .orderBy("sales_stats.total_revenue", "desc")
+  .get();
+```
+
+---
+
 ## Related Documentation
 
 - [Basic Queries](./basic-queries.md) - Basic SELECT operations

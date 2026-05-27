@@ -438,6 +438,49 @@ const sql = grammar.compileSelect(builder);
 
 ## Troubleshooting
 
+## Raw SQL Expression Handling
+
+The Grammar system properly handles raw SQL expressions to prevent unnecessary identifier wrapping and formatting issues.
+
+### ORDER BY Raw SQL
+
+When using `orderByRaw()`, the Grammar system recognizes raw SQL expressions and processes them correctly:
+
+```javascript
+// Raw ORDER BY with subquery - handled correctly
+const query = builder
+  .table("users")
+  .orderByRaw("(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) DESC");
+
+// Generated SQL (MySQL):
+// SELECT * FROM `users` 
+// ORDER BY (SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) DESC
+```
+
+### Key Improvements (v1.0.1)
+
+- **Raw Expression Detection**: The Grammar system now properly identifies raw SQL expressions
+- **No Identifier Wrapping**: Raw SQL expressions are not wrapped with database-specific identifiers  
+- **No Direction Appending**: Raw ORDER BY expressions maintain their specified direction without additional modification
+- **Subquery Support**: Complex subqueries in ORDER BY clauses are preserved exactly as written
+
+### Implementation Details
+
+The Grammar system uses an `isRaw` flag to determine processing behavior:
+
+```javascript
+// Internal Grammar processing
+const orders = query.queries.orders.queries.map((order) => {
+  const column = order.isRaw ? order.column : this.wrap(order.column);
+  const direction = order.isRaw ? "" : ` ${(order.direction || "ASC").toUpperCase()}`;
+  return `${column}${direction}`;
+});
+```
+
+This ensures that raw SQL expressions maintain their intended formatting while regular column names receive proper database-specific quoting.
+
+---
+
 ### Common Issues
 
 **Identifier Not Quoted**

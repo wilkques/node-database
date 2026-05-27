@@ -435,8 +435,28 @@ const activeCustomers = await db
 
 ### Subquery in SELECT
 
+#### Using selectSub() method (Recommended)
+
 ```javascript
-// Users with their order count
+// Users with their order count using selectSub
+const usersWithOrderCount = await db
+  .table("users")
+  .select("id", "name", "email")
+  .selectSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select("COUNT(*)")
+        .where("orders.user_id", "=", "users.id");
+    },
+    "order_count"
+  )
+  .get();
+```
+
+#### Using raw SQL (Alternative)
+
+```javascript
+// Users with their order count using raw SQL
 const usersWithOrderCount = await db
   .table("users")
   .select("id", "name", "email")
@@ -446,6 +466,57 @@ const usersWithOrderCount = await db
         FROM orders 
         WHERE orders.user_id = users.id
     ) as order_count`),
+  )
+  .get();
+```
+
+### FROM Subquery
+
+```javascript
+// Query based on aggregated data
+const highValueCustomers = await db
+  .fromSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select(["user_id", "SUM(total) as total_spent"])
+        .where("status", "completed")
+        .groupBy("user_id");
+    },
+    "customer_totals"
+  )
+  .join("users", "users.id", "=", "customer_totals.user_id")
+  .select("users.name", "customer_totals.total_spent")
+  .where("total_spent", ">", 1000)
+  .get();
+```
+
+### JOIN Subquery
+
+```javascript
+// Join with aggregated order data
+const usersWithStats = await db
+  .table("users")
+  .leftJoinSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select([
+          "user_id", 
+          "COUNT(*) as order_count",
+          "AVG(total) as avg_order_value"
+        ])
+        .where("status", "completed")
+        .groupBy("user_id");
+    },
+    "order_stats",
+    "users.id",
+    "=", 
+    "order_stats.user_id"
+  )
+  .select(
+    "users.name", 
+    "users.email",
+    "order_stats.order_count",
+    "order_stats.avg_order_value"
   )
   .get();
 ```

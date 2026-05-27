@@ -73,6 +73,104 @@ db.table("orders")
 
 ---
 
+### selectSub()
+
+Add subquery to SELECT clause. Executes a nested query and includes its result as a column in the main query.
+
+#### Syntax
+
+```javascript
+selectSub(subquery, alias);
+```
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+| --------- | ---- | -------- | ----------- |
+| `subquery` | `Function\|Builder` | ✅ | Subquery callback function or Builder instance |
+| `alias` | `string` | ✅ | Alias name for the subquery result column |
+
+#### Return Value
+
+`Builder` - Returns query builder instance for method chaining
+
+#### Usage Examples
+
+**Function-based subquery:**
+
+```javascript
+const users = await db
+  .table('users')
+  .select('id', 'name')
+  .selectSub(
+    subQuery => {
+      subQuery.table('orders')
+        .select('COUNT(*)')
+        .where('orders.user_id', '=', 'users.id');
+    },
+    'order_count'
+  )
+  .get();
+```
+
+**Builder instance subquery:**
+
+```javascript
+const orderCountSubquery = db.table('orders')
+  .select('COUNT(*)')
+  .where('orders.user_id', '=', 'users.id');
+
+const users = await db
+  .table('users')
+  .select('id', 'name')
+  .selectSub(orderCountSubquery, 'order_count')
+  .get();
+```
+
+---
+
+### fromSub()
+
+Use subquery as the main table source in FROM clause.
+
+#### Syntax
+
+```javascript
+fromSub(subquery, alias);
+```
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+| --------- | ---- | -------- | ----------- |
+| `subquery` | `Function\|Builder` | ✅ | Subquery callback function or Builder instance |
+| `alias` | `string` | ✅ | Alias name for the subquery table |
+
+#### Return Value
+
+`Builder` - Returns query builder instance for method chaining
+
+#### Usage Examples
+
+**Complex aggregation as base table:**
+
+```javascript
+const salesData = await db
+  .fromSub(
+    subQuery => {
+      subQuery.table('orders')
+        .select(['user_id', 'SUM(amount) as total_spent'])
+        .where('status', 'completed')
+        .groupBy('user_id');
+    },
+    'sales_summary'
+  )
+  .where('total_spent', '>', 1000)
+  .get();
+```
+
+---
+
 ### where()
 
 Add WHERE clause to filter query results. Supports multiple calling methods including simple comparisons, nested conditions, and subqueries.
@@ -278,6 +376,80 @@ Add LEFT JOIN clause.
 db.table("users")
   .leftJoin("orders", "users.id", "=", "orders.user_id")
   .select("users.name", "orders.total")
+  .get();
+```
+
+### joinSub()
+
+Add INNER JOIN with subquery.
+
+#### Syntax
+
+```javascript
+joinSub(subquery, alias, first, operator, second);
+```
+
+#### Parameters
+
+| Parameter | Type | Required | Description |
+| --------- | ---- | -------- | ----------- |
+| `subquery` | `Function\|Builder` | ✅ | Subquery callback function or Builder instance |
+| `alias` | `string` | ✅ | Alias name for the subquery table |
+| `first` | `string` | ✅ | First column for join condition |
+| `operator` | `string` | ❌ | Comparison operator (default: '=') |
+| `second` | `string` | ✅ | Second column for join condition |
+
+#### Usage Examples
+
+**Aggregated data join:**
+
+```javascript
+const users = await db
+  .table('users')
+  .joinSub(
+    subQuery => {
+      subQuery.table('orders')
+        .select(['user_id', 'COUNT(*) as order_count', 'SUM(total) as total_spent'])
+        .groupBy('user_id');
+    },
+    'user_stats',
+    'users.id',
+    '=',
+    'user_stats.user_id'
+  )
+  .select('users.name', 'user_stats.order_count', 'user_stats.total_spent')
+  .get();
+```
+
+### leftJoinSub()
+
+Add LEFT JOIN with subquery.
+
+#### Syntax
+
+```javascript
+leftJoinSub(subquery, alias, first, operator, second);
+```
+
+#### Usage Examples
+
+**Optional aggregated data:**
+
+```javascript
+const users = await db
+  .table('users')
+  .leftJoinSub(
+    subQuery => {
+      subQuery.table('reviews')
+        .select(['user_id', 'AVG(rating) as avg_rating', 'COUNT(*) as review_count'])
+        .groupBy('user_id');
+    },
+    'user_reviews',
+    'users.id',
+    '=',
+    'user_reviews.user_id'
+  )
+  .select('users.name', 'user_reviews.avg_rating', 'user_reviews.review_count')
   .get();
 ```
 

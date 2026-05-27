@@ -497,6 +497,103 @@ try {
 }
 ```
 
+## 高级功能
+
+### 子查询
+
+使用子查询进行聚合数据查询：
+
+```javascript
+// 用户及其订单数量（SELECT子查询）
+const usersWithOrderCount = await db
+  .table("users")
+  .select("id", "name", "email")
+  .selectSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select("COUNT(*)")
+        .where("orders.user_id", "=", "users.id");
+    },
+    "order_count"
+  )
+  .get();
+
+// 高价值客户（FROM子查询）
+const highValueCustomers = await db
+  .fromSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select(["user_id", "SUM(total) as total_spent"])
+        .where("status", "completed")
+        .groupBy("user_id");
+    },
+    "customer_totals"
+  )
+  .join("users", "users.id", "=", "customer_totals.user_id")
+  .select("users.name", "customer_totals.total_spent")
+  .where("total_spent", ">", 1000)
+  .get();
+
+// 用户订单统计（JOIN子查询）
+const usersWithStats = await db
+  .table("users")
+  .leftJoinSub(
+    subQuery => {
+      subQuery.table("orders")
+        .select([
+          "user_id",
+          "COUNT(*) as order_count", 
+          "AVG(total) as avg_order_value"
+        ])
+        .where("status", "completed")
+        .groupBy("user_id");
+    },
+    "order_stats",
+    "users.id",
+    "=",
+    "order_stats.user_id"
+  )
+  .select(
+    "users.name",
+    "order_stats.order_count", 
+    "order_stats.avg_order_value"
+  )
+  .get();
+```
+
+### 原始SQL表达式
+
+对于需要自定义SQL的复杂查询：
+
+```javascript
+// 使用子查询的自定义ORDER BY
+const topUsers = await db
+  .table("users")
+  .orderByRaw("(SELECT COUNT(*) FROM orders WHERE orders.user_id = users.id) DESC")
+  .limit(10)
+  .get();
+
+// 复杂WHERE条件
+const results = await db
+  .table("products")
+  .whereRaw("price BETWEEN ? AND ?", [100, 500])
+  .whereRaw("MATCH(name, description) AGAINST(?)", ["laptop gaming"])
+  .get();
+```
+
+---
+
+## 下一步
+
+现在你已经了解了基本用法，继续探索：
+
+1. 阅读更详细的[API文档](../api/Builder.md)
+2. 查看[高级示例](./advanced-examples.md)
+3. 学习[性能优化技巧](../Processors.md)
+4. 探索[数据库语法支持](../Grammar.md)
+
+祝编程愉快！如有问题，请随时提交Issue。
+
 ## 更多资源
 
 - [Builder API文档](../api/Builder.md) - 完整的方法参考
